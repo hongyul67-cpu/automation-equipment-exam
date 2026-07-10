@@ -115,6 +115,7 @@
 <script src="data/2018-3.js"></script>
 <script src="data/2017-1.js"></script>
 <script src="data/2017-3.js"></script>
+<script src="config.js"></script>
 <script>
 const $=(s,el=document)=>el.querySelector(s);
 const app=$("#app");
@@ -129,6 +130,68 @@ const LS={
   getStat(){try{return JSON.parse(localStorage.getItem(this.statKey))||{solved:0,correct:0,exams:0}}catch(e){return{solved:0,correct:0,exams:0}}},
   setStat(s){localStorage.setItem(this.statKey,JSON.stringify(s))}
 };
+
+/* ---------------- 클라우드 동기화 (Google 시트 / Apps Script) ---------------- */
+const SYNC_URL=(window.AUTOEXAM_CONFIG&&window.AUTOEXAM_CONFIG.syncUrl)||"";
+const SYNC={
+  meKey:"autoexam_me_v1", _t:null,
+  on(){return !!SYNC_URL;},
+  me(){try{return JSON.parse(localStorage.getItem(this.meKey))}catch(e){return null}},
+  setMe(m){localStorage.setItem(this.meKey,JSON.stringify(m));},
+  ready(){return this.on()&&!!this.me();},
+  _post(obj){if(!this.ready())return;
+    try{fetch(SYNC_URL,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(obj)});}catch(e){}},
+  save(){if(!this.ready())return;const me=this.me();
+    this._post({action:"save",cls:me.cls,name:me.name,wrong:LS.getWrong(),stat:LS.getStat()});flashSync();},
+  saveSoon(){if(!this.ready())return;clearTimeout(this._t);this._t=setTimeout(()=>this.save(),1200);},
+  result(exam,score,correct,total){if(!this.ready())return;const me=this.me();
+    this._post({action:"result",cls:me.cls,name:me.name,exam:exam,score:score,correct:correct,total:total});},
+  load(){if(!this.ready())return Promise.resolve(null);const me=this.me();
+    const u=SYNC_URL+"?action=load&cls="+encodeURIComponent(me.cls)+"&name="+encodeURIComponent(me.name);
+    return jsonp(u).catch(()=>null);}
+};
+function jsonp(url){return new Promise((res,rej)=>{
+  const cb="__jp"+Math.random().toString(36).slice(2);
+  window[cb]=d=>{res(d);done();};
+  const s=document.createElement("script");
+  s.src=url+(url.indexOf("?")<0?"?":"&")+"callback="+cb;
+  s.onerror=()=>{rej(new Error("net"));done();};
+  function done(){try{delete window[cb]}catch(e){}s.remove();}
+  document.body.appendChild(s);
+  setTimeout(()=>{if(window[cb]){rej(new Error("timeout"));done();}},10000);
+});}
+function flashSync(){const el=$("#syncdot");if(!el)return;el.textContent="☁ 저장됨";el.style.color="var(--ok)";
+  setTimeout(()=>{const e2=$("#syncdot");if(e2){e2.textContent="☁ 자동 저장";e2.style.color="";}},1400);}
+function mergeRemote(r){if(!r||(r.found===false))return;
+  const local=LS.getWrong(),rem=r.wrong||[],seen=new Set(local.map(x=>x.k+"#"+x.no));
+  rem.forEach(x=>{const kk=x.k+"#"+x.no;if(!seen.has(kk)){local.push({k:x.k,no:x.no});seen.add(kk);}});
+  LS.setWrong(local);
+  if(r.stat){const ls=LS.getStat();if((r.stat.solved||0)>=(ls.solved||0))
+    LS.setStat({solved:r.stat.solved||0,correct:r.stat.correct||0,exams:r.stat.exams||ls.exams||0});}
+}
+function gate(){
+  app.innerHTML=`
+  <div class="card">
+    <span class="pill">학습자 확인</span>
+    <h3 style="margin:10px 0 6px">누구인지 알려주세요</h3>
+    <p style="color:var(--muted);font-size:13.5px;margin:0 0 14px">진도·오답노트를 저장해 어느 기기에서든 이어서 학습할 수 있어요.</p>
+    <div class="row" style="margin-bottom:10px">반 <input id="inCls" placeholder="예: 2-3" style="flex:1;padding:10px;border:1px solid #cbd5e1;border-radius:10px;font-size:15px"></div>
+    <div class="row">이름 <input id="inName" placeholder="예: 홍길동" style="flex:1;padding:10px;border:1px solid #cbd5e1;border-radius:10px;font-size:15px"></div>
+    <div class="navbtns" style="margin-top:16px"><span></span><button class="btn primary" onclick="doLogin()">시작 ▶</button></div>
+  </div>`;
+  const me=SYNC.me();if(me){$("#inCls").value=me.cls||"";$("#inName").value=me.name||"";}
+  setTimeout(()=>{const el=$("#inName");if(el)el.focus();},50);
+}
+async function doLogin(){
+  const cls=($("#inCls").value||"").trim(),name=($("#inName").value||"").trim();
+  if(!name){alert("이름을 입력해 주세요.");return;}
+  SYNC.setMe({cls,name});
+  app.innerHTML=`<div class="card"><div class="empty">이어할 내용을 불러오는 중… ⏳</div></div>`;
+  try{const r=await SYNC.load();mergeRemote(r);}catch(e){}
+  SYNC.save();home();
+}
+function logout(){localStorage.removeItem(SYNC.meKey);gate();}
+
 const examKey=e=>e.year+"-"+e.round;
 function findQ(k,no){const e=EXAMS.find(x=>examKey(x)===k);return e?e.questions.find(q=>q.no===no):null;}
 function allSubjects(){const s=new Set();EXAMS.forEach(e=>e.questions.forEach(q=>s.add(q.subject)));return[...s];}
@@ -139,8 +202,12 @@ function home(){
   const st=LS.getStat(), wrong=LS.getWrong().length;
   const totalQ=EXAMS.reduce((a,e)=>a+e.questions.length,0);
   const acc=st.solved?Math.round(st.correct/st.solved*100):0;
+  const me=SYNC.me()||{};
   app.innerHTML=`
   <div class="card">
+    ${SYNC.on()?`<div class="row" style="justify-content:space-between;align-items:center;margin-bottom:12px;font-size:13.5px">
+      <span>👤 <b>${esc(me.cls||"")} ${esc(me.name||"")}</b> <span id="syncdot" style="color:var(--muted);margin-left:6px">☁ 자동 저장</span></span>
+      <button class="back" style="margin:0" onclick="logout()">학습자 변경</button></div>`:""}
     <div class="modes">
       <div class="mode wide" onclick="startCBTpick()">
         <div class="ic">📝</div><h3>CBT 모의고사</h3>
@@ -231,6 +298,8 @@ function submitCBT(){
   const e=CBT.exam,k=examKey(e);let correct=0;const wrongList=[];
   e.questions.forEach(q=>{const a=CBT.ans[q.no];const ok=a===q.answer;if(ok)correct++;else{wrongList.push(q);LS.addWrong(k,q.no);}});
   const st=LS.getStat();st.solved+=e.questions.length;st.correct+=correct;st.exams+=1;LS.setStat(st);
+  const total=e.questions.length,score=Math.round(correct/total*100);
+  SYNC.result(e.title,score,correct,total);SYNC.save();
   resultCBT(correct,wrongList);
 }
 function resultCBT(correct,wrongList){
@@ -322,7 +391,7 @@ function renderStudy(){
     d.className=cls;d.innerHTML=`<span class="num">${NUM[n]}</span><span>${q.choicesImg?"":esc(c)}</span>`;
     if(!done)d.onclick=()=>{STUDY.picked=n;const ok=n===q.answer;
       const st=LS.getStat();st.solved++;if(ok)st.correct++;LS.setStat(st);
-      if(!ok)LS.addWrong(q._k,q.no);renderStudy();};
+      if(!ok)LS.addWrong(q._k,q.no);SYNC.saveSoon();renderStudy();};
     ch.appendChild(d);});
 }
 function studyGo(d){const ni=STUDY.i+d;if(ni<0||ni>=STUDY.qs.length)return;STUDY.i=ni;STUDY.picked=null;renderStudy();}
@@ -361,12 +430,13 @@ function renderNote(){
     if(!done)d.onclick=()=>{NOTE.picked=n;renderNote();};ch.appendChild(d);});
 }
 function noteGo(d){const ni=NOTE.i+d;if(ni<0||ni>=NOTE.qs.length)return;NOTE.i=ni;NOTE.picked=null;renderNote();}
-function masterNote(){const q=NOTE.qs[NOTE.i];LS.removeWrong(q._k,q.no);
+function masterNote(){const q=NOTE.qs[NOTE.i];LS.removeWrong(q._k,q.no);SYNC.saveSoon();
   NOTE.qs.splice(NOTE.i,1);if(!NOTE.qs.length){home();return;}
   if(NOTE.i>=NOTE.qs.length)NOTE.i=NOTE.qs.length-1;NOTE.picked=null;renderNote();}
 
 /* boot */
 if(!EXAMS.length){app.innerHTML=`<div class="card"><div class="empty">문제 데이터를 불러오지 못했습니다.</div></div>`;}
+else if(SYNC.on()&&!SYNC.me()){gate();}
 else home();
 </script>
 </body>

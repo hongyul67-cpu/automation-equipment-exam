@@ -61,6 +61,7 @@
   .expl{margin-top:12px;background:#fffbeb;border:1px solid #fde68a;border-radius:12px;padding:12px 14px;font-size:14px;line-height:1.65;color:#78350f;display:none;word-break:keep-all}
   .expl.show{display:block}
   .expl b{color:#b45309}
+  .expl b.ansline{display:block;color:#166534;background:#dcfce7;border:1px solid #86efac;border-radius:8px;padding:6px 10px;margin-bottom:8px;font-size:15px}
   .navbtns{display:flex;justify-content:space-between;gap:10px;margin-top:16px}
   /* OMR grid */
   .omr{display:grid;grid-template-columns:repeat(10,1fr);gap:6px;margin-top:6px}
@@ -378,7 +379,7 @@ function renderStudy(){
     <div class="qtext">${esc(q.q)}</div>
     ${q.img?`<img class="qimg" src="${q.img}">`:""}
     <div class="choices" id="choices"></div>
-    <div class="expl ${done?"show":""}"><b>해설</b> · ${esc(q.explain)}</div>
+    <div class="expl ${done?"show":""}">${done?`<b class="ansline">✅ 정답 ${NUM[q.answer]}번${q.choicesImg?" (위 그림 참고)":""}</b>`:""}<b>해설</b> · ${esc(q.explain)}</div>
     <div class="navbtns">
       <button class="btn ghost" onclick="studyGo(-1)" ${STUDY.i===0?"disabled":""}>◀ 이전</button>
       <button class="btn primary" onclick="studyGo(1)" ${STUDY.i===STUDY.qs.length-1?"disabled":""}>다음 ▶</button>
@@ -416,7 +417,7 @@ function renderNote(){
     <div class="qtext">${esc(q.q)}</div>
     ${q.img?`<img class="qimg" src="${q.img}">`:""}
     <div class="choices" id="choices"></div>
-    <div class="expl ${done?"show":""}"><b>해설</b> · ${esc(q.explain)}</div>
+    <div class="expl ${done?"show":""}">${done?`<b class="ansline">✅ 정답 ${NUM[q.answer]}번${q.choicesImg?" (위 그림 참고)":""}</b>`:""}<b>해설</b> · ${esc(q.explain)}</div>
     <div class="navbtns">
       <button class="btn ghost" onclick="noteGo(-1)" ${NOTE.i===0?"disabled":""}>◀ 이전</button>
       <button class="btn ghost" onclick="masterNote()">✓ 익힘(삭제)</button>

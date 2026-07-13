@@ -313,12 +313,21 @@ function resultCBT(correct,wrongList){
     <div class="scorebig" style="color:${color};margin-top:10px">${score}점</div>
     <div class="passbar"><div style="width:${score}%;background:${color}"></div></div>
     <div class="result-note">${correct} / ${total} 정답 · <b style="color:${color}">${pass?"합격 🎉":"불합격 (60점 미만)"}</b></div>
-    <div class="navbtns" style="margin-top:16px">
+    ${(window.ResultCollector&&ResultCollector.config&&ResultCollector.config.endpoint)?`<button class="btn" style="width:100%;margin-top:14px;background:#16a34a;color:#fff" onclick="submitResult()">📤 선생님께 결과 제출</button>`:""}
+    <div class="navbtns" style="margin-top:12px">
       <button class="btn ghost" onclick="startCBT(EXAMS.indexOf(CBT.exam))">다시 풀기</button>
       <button class="btn primary" onclick="reviewCBT()">틀린 문제 해설 (${wrongList.length})</button>
     </div>
   </div>`;
-  CBT._wrong=wrongList;
+  CBT._score=score;CBT._correct=correct;CBT._total=total;CBT._dur=60*60-CBT.left;CBT._wrong=wrongList;
+}
+function submitResult(){
+  if(!(window.ResultCollector&&ResultCollector.config&&ResultCollector.config.endpoint)){
+    alert("결과 제출 링크로 접속했을 때만 제출할 수 있어요. (선생님이 배포한 링크를 사용하세요)");return;}
+  ResultCollector.open({
+    score:CBT._score, correct:CBT._correct, total:CBT._total,
+    wrong:(CBT._wrong||[]).map(q=>q.no), durationSec:CBT._dur
+  });
 }
 function reviewCBT(){
   const list=CBT._wrong||[];
@@ -440,5 +449,7 @@ if(!EXAMS.length){app.innerHTML=`<div class="card"><div class="empty">문제 데
 else if(SYNC.on()&&!SYNC.me()){gate();}
 else home();
 </script>
+<!-- 결과 수집 위젯: 선생님이 링크 생성기로 만든 ?rc= 링크로 접속하면 CBT 결과에 '제출' 버튼이 나타납니다 -->
+<script src="https://hongyul67-cpu.github.io/result-collector/collector.js" data-tool="자동화설비 필기"></script>
 </body>
 </html>

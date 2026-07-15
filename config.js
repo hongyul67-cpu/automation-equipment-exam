@@ -7,5 +7,5 @@
 //  · 채워두면  → 학생이 반·이름으로 어느 기기서든 이어하기 + 교사가 구글 시트로 확인.
 // ─────────────────────────────────────────────────────────────
 window.AUTOEXAM_CONFIG = {
-  syncUrl: ""   // 예: "https://script.google.com/macros/s/AKfy..../exec"
+  syncUrl: "https://script.google.com/macros/s/AKfycbx_3vHqONU7_rMHhgHqZ1Vqem6kd23SIyLLDplWn7DJbR_3V0ChVXanOjKg8fTQFIIvjg/exec"   // 예: "https://script.google.com/macros/s/AKfy..../exec"
 };

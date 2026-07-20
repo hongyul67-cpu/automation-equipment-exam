@@ -215,8 +215,8 @@ function home(){
         <p>실제 시험처럼 60문항·60분 타이머로 풀고 자동 채점. 틀린 문제는 오답노트에 자동 저장됩니다.</p>
       </div>
       <div class="mode" onclick="studyPick()">
-        <div class="ic">📚</div><h3>과목별 학습</h3>
-        <p>과목·연도별로 한 문제씩 풀며 바로 해설 확인.</p>
+        <div class="ic">📚</div><h3>항목별 학습 · 시험</h3>
+        <p>과목·범위를 골라 <b>학습</b>(바로 해설) 또는 <b>시험</b>(채점·제출)으로 풀 수 있어요.</p>
       </div>
       <div class="mode" onclick="wrongNote()">
         <div class="ic">🔖</div><h3>오답노트</h3>
@@ -321,9 +321,11 @@ function resultCBT(correct,wrongList){
   </div>`;
   CBT._score=score;CBT._correct=correct;CBT._total=total;CBT._dur=60*60-CBT.left;CBT._wrong=wrongList;
 }
+const BASE_TOOL="자동화설비 필기";
+function rcReady(){return !!(window.ResultCollector&&ResultCollector.config&&ResultCollector.config.endpoint);}
 function submitResult(){
-  if(!(window.ResultCollector&&ResultCollector.config&&ResultCollector.config.endpoint)){
-    alert("결과 제출 링크로 접속했을 때만 제출할 수 있어요. (선생님이 배포한 링크를 사용하세요)");return;}
+  if(!rcReady()){alert("결과 제출 링크로 접속했을 때만 제출할 수 있어요. (선생님이 배포한 링크를 사용하세요)");return;}
+  ResultCollector.config.tool=BASE_TOOL+" · "+CBT.exam.title;
   ResultCollector.open({
     score:CBT._score, correct:CBT._correct, total:CBT._total,
     wrong:(CBT._wrong||[]).map(q=>q.no), durationSec:CBT._dur
@@ -360,24 +362,40 @@ function studyPick(){
   app.innerHTML=`
   <button class="back" onclick="home()">← 홈</button>
   <div class="card">
-    <span class="pill">과목별 학습</span>
+    <span class="pill">항목별 학습 · 시험</span>
     <h3 style="margin:10px 0 6px">범위 선택</h3>
-    <p style="color:var(--muted);font-size:13.5px;margin:0 0 14px">한 문제씩 풀면 바로 정답·해설을 보여줍니다.</p>
+    <p style="color:var(--muted);font-size:13.5px;margin:0 0 14px">과목·회차·문항 수를 고르고 <b>학습</b> 또는 <b>시험</b>을 시작하세요.</p>
     <div class="row" style="margin-bottom:10px">과목 <select id="subSel">${subOpts}</select></div>
-    <div class="row">회차 <select id="exSel2">${exOpts}</select></div>
+    <div class="row" style="margin-bottom:10px">회차 <select id="exSel2">${exOpts}</select></div>
+    <div class="row">문항 수 <select id="cntSel">
+      <option value="__all">전체</option>
+      <option value="10">10문항</option>
+      <option value="20" selected>20문항</option>
+      <option value="30">30문항</option>
+      <option value="40">40문항</option>
+    </select></div>
     <label style="display:flex;align-items:center;gap:8px;margin-top:12px;font-size:13.5px;color:#475569">
-      <input type="checkbox" id="shuf"> 문제 순서 섞기</label>
-    <div class="navbtns"><span></span><button class="btn primary" onclick="startStudy()">시작 ▶</button></div>
+      <input type="checkbox" id="shuf" checked> 문제 순서 섞기</label>
+    <div style="display:flex;gap:10px;margin-top:16px">
+      <button class="btn ghost" style="flex:1" onclick="startStudy()">📖 학습<br><small style="font-weight:400;color:var(--muted)">바로 해설</small></button>
+      <button class="btn primary" style="flex:1" onclick="startQuiz()">📝 시험<br><small style="font-weight:400;opacity:.85">채점 · 제출</small></button>
+    </div>
   </div>`;
 }
-function startStudy(){
+function buildStudyList(){
   const sub=$("#subSel").value, exv=$("#exSel2").value, shuf=$("#shuf").checked;
+  const cntEl=$("#cntSel"); const cnt=cntEl?cntEl.value:"__all";
   let qs=[];
   EXAMS.forEach((e,i)=>{if(exv!=="__all"&&+exv!==i)return;
     e.questions.forEach(q=>{if(sub!=="__all"&&q.subject!==sub)return;qs.push({...q,_k:examKey(e)});});});
   if(shuf)for(let i=qs.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[qs[i],qs[j]]=[qs[j],qs[i]];}
+  if(cnt!=="__all"){const n=parseInt(cnt,10);if(qs.length>n)qs=qs.slice(0,n);}
+  return {qs, label:(sub==="__all"?"전체":sub)};
+}
+function startStudy(){
+  const {qs,label}=buildStudyList();
   if(!qs.length){alert("해당 조건의 문제가 없습니다.");return;}
-  STUDY={qs,i:0,picked:null,label:(sub==="__all"?"전체":sub)};renderStudy();
+  STUDY={qs,i:0,picked:null,label};renderStudy();
 }
 function renderStudy(){
   const q=STUDY.qs[STUDY.i],picked=STUDY.picked,done=picked!=null;
@@ -405,6 +423,106 @@ function renderStudy(){
     ch.appendChild(d);});
 }
 function studyGo(d){const ni=STUDY.i+d;if(ni<0||ni>=STUDY.qs.length)return;STUDY.i=ni;STUDY.picked=null;renderStudy();}
+
+/* ---------------- 항목별 시험 모드 ---------------- */
+let QUIZ=null;
+function startQuiz(){
+  const {qs,label}=buildStudyList();
+  if(!qs.length){alert("해당 조건의 문제가 없습니다.");return;}
+  if(qs.length>80&&!confirm(`문항이 ${qs.length}개로 많습니다. 범위나 문항 수를 줄이는 게 좋아요.\n그래도 시작할까요?`))return;
+  QUIZ={qs,i:0,ans:{},label,start:Date.now()};renderQuiz();
+}
+function renderQuiz(){
+  const q=QUIZ.qs[QUIZ.i],N=QUIZ.qs.length,answered=Object.keys(QUIZ.ans).length;
+  app.innerHTML=`
+  <div class="row" style="justify-content:space-between;color:#fff;margin-bottom:8px">
+    <button class="back" onclick="quitQuiz()">← 나가기</button>
+    <span class="timer">📝 ${esc(QUIZ.label)} 시험</span>
+  </div>
+  <div class="card">
+    <div class="qhead"><span class="qno">${QUIZ.i+1} / ${N}</span><span class="qsubj">${esc(q.subject)} · ${q._k}</span></div>
+    <div class="qtext">${esc(q.q)}</div>
+    ${q.img?`<img class="qimg" src="${q.img}">`:""}
+    <div class="choices" id="choices"></div>
+    <div class="navbtns">
+      <button class="btn ghost" onclick="quizGo(-1)" ${QUIZ.i===0?"disabled":""}>◀ 이전</button>
+      ${QUIZ.i===N-1
+        ? `<button class="btn primary" onclick="submitQuiz()">제출하기 (${answered}/${N})</button>`
+        : `<button class="btn primary" onclick="quizGo(1)">다음 ▶</button>`}
+    </div>
+  </div>
+  <div class="card" style="margin-top:12px">
+    <div class="row" style="justify-content:space-between"><b style="font-size:13.5px">답안지 (OMR)</b>
+      <span style="font-size:12.5px;color:var(--muted)">${answered}/${N} 완료</span></div>
+    <div class="omr" id="omr"></div>
+  </div>`;
+  const ch=$("#choices");
+  q.choices.forEach((c,k)=>{const n=k+1;const sel=QUIZ.ans[QUIZ.i]===n;
+    const d=document.createElement("div");d.className="choice"+(sel?" sel":"");
+    d.innerHTML=`<span class="num">${NUM[n]}</span><span>${q.choicesImg?"":esc(c)}</span>`;
+    d.onclick=()=>{QUIZ.ans[QUIZ.i]=n;renderQuiz();};ch.appendChild(d);});
+  const omr=$("#omr");
+  QUIZ.qs.forEach((qq,k)=>{const b=document.createElement("button");b.textContent=k+1;
+    if(QUIZ.ans[k])b.classList.add("done");if(k===QUIZ.i)b.classList.add("cur");
+    b.onclick=()=>{QUIZ.i=k;renderQuiz();};omr.appendChild(b);});
+}
+function quizGo(d){QUIZ.i=Math.min(QUIZ.qs.length-1,Math.max(0,QUIZ.i+d));renderQuiz();}
+function quitQuiz(){if(confirm("시험을 종료하고 홈으로 이동할까요? (답안은 저장되지 않습니다)")){QUIZ=null;home();}}
+function submitQuiz(){
+  const N=QUIZ.qs.length,un=N-Object.keys(QUIZ.ans).length;
+  if(un>0&&!confirm(`아직 ${un}문제를 풀지 않았습니다. 제출할까요?`))return;
+  let correct=0;const wrongIdx=[];
+  QUIZ.qs.forEach((q,k)=>{const a=QUIZ.ans[k];const ok=a===q.answer;
+    if(ok)correct++;else{wrongIdx.push(k);LS.addWrong(q._k,q.no);}});
+  const st=LS.getStat();st.solved+=N;st.correct+=correct;LS.setStat(st);SYNC.saveSoon();
+  QUIZ._correct=correct;QUIZ._total=N;QUIZ._score=Math.round(correct/N*100);
+  QUIZ._dur=Math.round((Date.now()-QUIZ.start)/1000);QUIZ._wrong=wrongIdx;
+  resultQuiz();
+}
+function resultQuiz(){
+  const N=QUIZ._total,correct=QUIZ._correct,score=QUIZ._score;
+  const pass=score>=60;const color=pass?"var(--ok)":"var(--no)";
+  app.innerHTML=`
+  <button class="back" onclick="home()">← 홈</button>
+  <div class="card">
+    <span class="pill">${esc(QUIZ.label)} 시험 · 결과</span>
+    <div class="scorebig" style="color:${color};margin-top:10px">${score}점</div>
+    <div class="passbar"><div style="width:${score}%;background:${color}"></div></div>
+    <div class="result-note">${correct} / ${N} 정답 · <b style="color:${color}">${pass?"합격 🎉":"불합격 (60점 미만)"}</b></div>
+    ${rcReady()?`<button class="btn" style="width:100%;margin-top:14px;background:#16a34a;color:#fff" onclick="submitSubjectResult()">📤 선생님께 결과 제출</button>`:""}
+    <div class="navbtns" style="margin-top:12px">
+      <button class="btn ghost" onclick="studyPick()">범위 다시 선택</button>
+      <button class="btn primary" onclick="reviewQuiz()">틀린 문제 해설 (${QUIZ._wrong.length})</button>
+    </div>
+  </div>`;
+}
+function submitSubjectResult(){
+  if(!rcReady()){alert("결과 제출 링크로 접속했을 때만 제출할 수 있어요. (선생님이 배포한 링크를 사용하세요)");return;}
+  ResultCollector.config.tool=BASE_TOOL+" · "+QUIZ.label;
+  ResultCollector.open({
+    score:QUIZ._score, correct:QUIZ._correct, total:QUIZ._total,
+    wrong:QUIZ._wrong.map(k=>QUIZ.qs[k]._k+"-"+QUIZ.qs[k].no), durationSec:QUIZ._dur
+  });
+}
+function reviewQuiz(){
+  const wrong=QUIZ._wrong||[];
+  let html=`<button class="back" onclick="resultQuiz()">← 결과</button><div class="card"><span class="pill">틀린 문제 해설</span>`;
+  if(!wrong.length)html+=`<div class="empty">틀린 문제가 없습니다. 완벽합니다! 🏆</div>`;
+  wrong.forEach(k=>{const q=QUIZ.qs[k],my=QUIZ.ans[k];
+    html+=`<div class="miniq">
+      <div class="qhead"><span class="qno">${k+1}번</span><span class="qsubj">${esc(q.subject)} · ${q._k}</span></div>
+      <div class="qtext">${esc(q.q)}</div>
+      ${q.img?`<img class="qimg" src="${q.img}">`:""}
+      <div style="font-size:14px;line-height:1.7">
+        ${q.choices.map((c,i)=>{const n=i+1;let t=q.choicesImg?"":esc(c);
+          if(n===q.answer)return `<div class="tag-ok">${NUM[n]} ${t} ✔ 정답</div>`;
+          if(n===my)return `<div class="tag-no">${NUM[n]} ${t} ✘ 내 답</div>`;
+          return `<div style="color:#94a3b8">${NUM[n]} ${t}</div>`;}).join("")}
+      </div>
+      <div class="expl show"><b>해설</b> · ${esc(q.explain)}</div>
+    </div>`;});
+  html+=`</div>`;app.innerHTML=html;
+}
 
 /* ---------------- 오답노트 ---------------- */
 let NOTE=null;

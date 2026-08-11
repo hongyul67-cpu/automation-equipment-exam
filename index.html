@@ -82,6 +82,25 @@
   .empty{text-align:center;color:var(--muted);padding:34px 10px;font-size:14.5px}
   .foot{color:#94a3b8;font-size:11.5px;text-align:center;margin-top:22px}
   select{font-family:inherit;font-size:14px;padding:9px 10px;border-radius:10px;border:1px solid var(--line);background:#fff}
+  /* theory */
+  .tlist{display:flex;flex-direction:column;gap:8px}
+  .titem{display:flex;align-items:center;gap:12px;border:1px solid var(--line);border-radius:12px;padding:12px 14px;cursor:pointer;background:#fff;transition:.12s;font-size:14.5px}
+  .titem:hover{border-color:var(--brand);background:#f8fafc}
+  .titem.sm{padding:10px 12px;font-size:14px}
+  .tic{font-size:22px}
+  .tbar{height:6px;background:#e2e8f0;border-radius:999px;margin:6px 0 4px;overflow:hidden}
+  .tbar>div{height:100%;background:var(--brand);border-radius:999px}
+  .tbody{font-size:15px;line-height:1.75;color:#1e293b;word-break:keep-all}
+  .tbody h4.th{margin:18px 0 6px;font-size:15px;color:var(--brand);border-left:4px solid var(--brand);padding-left:8px}
+  .tbody .tp{margin:6px 0}
+  .tbody ul.tul{margin:6px 0;padding-left:20px}
+  .tbody ul.tul li{margin:5px 0}
+  .ttblwrap{overflow-x:auto;margin:8px 0}
+  table.ttbl{border-collapse:collapse;width:100%;font-size:13.5px;min-width:340px}
+  table.ttbl td,table.ttbl th{border:1px solid var(--line);padding:7px 9px;vertical-align:top;text-align:left}
+  table.ttbl th{background:#eff6ff;color:var(--brand);font-weight:700}
+  table.ttbl tr:nth-child(odd) td{background:#fafbfc}
+  .ttip{margin-top:14px;background:#ecfdf5;border:1px solid #a7f3d0;border-radius:12px;padding:11px 13px;font-size:13.5px;color:#065f46;line-height:1.6}
   @media(max-width:520px){.omr{grid-template-columns:repeat(8,1fr)}.modes{grid-template-columns:1fr}.mode.wide{grid-column:auto}}
 </style>
 </head>
@@ -116,6 +135,12 @@
 <script src="data/2018-3.js"></script>
 <script src="data/2017-1.js"></script>
 <script src="data/2017-3.js"></script>
+<script src="data/theory-01-drawing.js"></script>
+<script src="data/theory-02-machining.js"></script>
+<script src="data/theory-03-assembly.js"></script>
+<script src="data/theory-04-safety.js"></script>
+<script src="data/theory-05-fluid.js"></script>
+<script src="data/theory-06-control.js"></script>
 <script src="config.js"></script>
 <script>
 const $=(s,el=document)=>el.querySelector(s);
@@ -129,7 +154,10 @@ const LS={
   addWrong(examKey,no){const w=this.getWrong();if(!w.some(x=>x.k===examKey&&x.no===no)){w.push({k:examKey,no});this.setWrong(w)}},
   removeWrong(examKey,no){this.setWrong(this.getWrong().filter(x=>!(x.k===examKey&&x.no===no)))},
   getStat(){try{return JSON.parse(localStorage.getItem(this.statKey))||{solved:0,correct:0,exams:0}}catch(e){return{solved:0,correct:0,exams:0}}},
-  setStat(s){localStorage.setItem(this.statKey,JSON.stringify(s))}
+  setStat(s){localStorage.setItem(this.statKey,JSON.stringify(s))},
+  readKey:"autoexam_read_v1",
+  getRead(){try{return JSON.parse(localStorage.getItem(this.readKey))||{}}catch(e){return{}}},
+  markRead(k){const r=this.getRead();if(!r[k]){r[k]=1;localStorage.setItem(this.readKey,JSON.stringify(r));}}
 };
 
 /* ---------------- 클라우드 동기화 (Google 시트 / Apps Script) ---------------- */
@@ -213,6 +241,10 @@ function home(){
       <div class="mode wide" onclick="startCBTpick()">
         <div class="ic">📝</div><h3>CBT 모의고사</h3>
         <p>실제 시험처럼 60문항·60분 타이머로 풀고 자동 채점. 틀린 문제는 오답노트에 자동 저장됩니다.</p>
+      </div>
+      <div class="mode wide" onclick="theoryPick()">
+        <div class="ic">📖</div><h3>이론 학습 (개념 정리)</h3>
+        <p>시험에 나오는 핵심 개념을 과목별로 정리했어요. 개념을 읽고 <b>바로 관련 기출</b>을 풀 수 있습니다.</p>
       </div>
       <div class="mode" onclick="studyPick()">
         <div class="ic">📚</div><h3>항목별 학습 · 시험</h3>
@@ -400,7 +432,7 @@ function startStudy(){
 function renderStudy(){
   const q=STUDY.qs[STUDY.i],picked=STUDY.picked,done=picked!=null;
   app.innerHTML=`
-  <button class="back" onclick="studyPick()">← 범위 변경</button>
+  <button class="back" onclick="${STUDY._back?"studyBack()":"studyPick()"}">← ${STUDY._back?"개념으로":"범위 변경"}</button>
   <div class="card">
     <div class="qhead"><span class="qno">${STUDY.i+1} / ${STUDY.qs.length}</span><span class="qsubj">${esc(q.subject)} · ${q._k}</span></div>
     <div class="qtext">${esc(q.q)}</div>
@@ -423,6 +455,7 @@ function renderStudy(){
     ch.appendChild(d);});
 }
 function studyGo(d){const ni=STUDY.i+d;if(ni<0||ni>=STUDY.qs.length)return;STUDY.i=ni;STUDY.picked=null;renderStudy();}
+function studyBack(){if(STUDY&&STUDY._back)STUDY._back();else studyPick();}
 
 /* ---------------- 항목별 시험 모드 ---------------- */
 let QUIZ=null;
@@ -522,6 +555,101 @@ function reviewQuiz(){
       <div class="expl show"><b>해설</b> · ${esc(q.explain)}</div>
     </div>`;});
   html+=`</div>`;app.innerHTML=html;
+}
+
+/* ---------------- 이론 학습 ---------------- */
+const THEORY=(window.THEORY||[]);
+function theoryCount(){return THEORY.reduce((a,s)=>a+s.chapters.reduce((b,c)=>b+c.cards.length,0),0);}
+function theoryPick(){
+  if(!THEORY.length){app.innerHTML=`<button class="back" onclick="home()">← 홈</button><div class="card"><div class="empty">이론 데이터를 불러오지 못했습니다.</div></div>`;return;}
+  const done=LS.getRead();
+  app.innerHTML=`
+  <button class="back" onclick="home()">← 홈</button>
+  <div class="card">
+    <span class="pill">이론 학습</span>
+    <h3 style="margin:10px 0 6px">과목 선택</h3>
+    <p style="color:var(--muted);font-size:13.5px;margin:0 0 14px">핵심 개념 <b>${theoryCount()}</b>개 · 개념을 읽고 관련 기출을 바로 풀어보세요.</p>
+    <div class="tlist">
+    ${THEORY.map((s,i)=>{
+      const tot=s.chapters.reduce((b,c)=>b+c.cards.length,0);
+      const rd=s.chapters.reduce((b,c)=>b+c.cards.filter(k=>done[s.subject+"|"+k.t]).length,0);
+      const pct=tot?Math.round(rd/tot*100):0;
+      return `<div class="titem" onclick="theorySubject(${i})">
+        <div class="tic">${s.icon}</div>
+        <div style="flex:1">
+          <b>${esc(s.subject)}</b>
+          <div class="tbar"><div style="width:${pct}%"></div></div>
+          <small style="color:var(--muted)">${s.chapters.length}단원 · ${tot}개 개념 · 읽음 ${rd}/${tot}</small>
+        </div><span style="color:var(--muted)">›</span></div>`;}).join("")}
+    </div>
+  </div>`;
+}
+function theorySubject(si){
+  const s=THEORY[si],done=LS.getRead();
+  app.innerHTML=`
+  <button class="back" onclick="theoryPick()">← 과목 선택</button>
+  <div class="card">
+    <span class="pill">${s.icon} ${esc(s.subject)}</span>
+    <h3 style="margin:10px 0 12px">단원 선택</h3>
+    ${s.chapters.map((c,ci)=>`
+      <div style="margin-bottom:14px">
+        <b style="font-size:14.5px;color:var(--brand)">${esc(c.title)}</b>
+        <div class="tlist" style="margin-top:6px">
+        ${c.cards.map((k,ki)=>`<div class="titem sm" onclick="theoryCard(${si},${ci},${ki})">
+          <div style="flex:1">${done[s.subject+"|"+k.t]?"✅ ":"📄 "}${esc(k.t)}</div>
+          <span style="color:var(--muted)">›</span></div>`).join("")}
+        </div>
+      </div>`).join("")}
+  </div>`;
+}
+function theoryCard(si,ci,ki){
+  const s=THEORY[si],c=s.chapters[ci],k=c.cards[ki];
+  LS.markRead(s.subject+"|"+k.t);
+  const rel=relatedQs(s.subject,k.q||[]);
+  const prev=ki>0?`theoryCard(${si},${ci},${ki-1})`:(ci>0?`theoryCard(${si},${ci-1},${s.chapters[ci-1].cards.length-1})`:"");
+  const next=ki<c.cards.length-1?`theoryCard(${si},${ci},${ki+1})`:(ci<s.chapters.length-1?`theoryCard(${si},${ci+1},0)`:"");
+  app.innerHTML=`
+  <button class="back" onclick="theorySubject(${si})">← ${esc(s.subject)} 단원</button>
+  <div class="card">
+    <div class="qhead"><span class="qno">${esc(k.t)}</span><span class="qsubj">${esc(c.title)}</span></div>
+    <div class="tbody">${(k.body||[]).map(renderBlock).join("")}</div>
+    ${rel.length?`<button class="btn primary" style="width:100%;margin-top:16px" onclick="startTheoryQuiz(${si},${ci},${ki})">📝 관련 기출 ${rel.length}문제 풀기</button>`:""}
+    <div class="navbtns">
+      <button class="btn ghost" onclick="${prev||'theorySubject('+si+')'}" ${prev?"":"disabled"}>◀ 이전</button>
+      <button class="btn ghost" onclick="${next||'theorySubject('+si+')'}" ${next?"":"disabled"}>다음 ▶</button>
+    </div>
+  </div>`;
+  window.scrollTo(0,0);
+}
+function renderBlock(b){
+  let h="";
+  if(b.h)h+=`<h4 class="th">${b.h}</h4>`;
+  if(b.p)h+=`<p class="tp">${b.p}</p>`;
+  if(b.ul)h+=`<ul class="tul">${b.ul.map(x=>`<li>${x}</li>`).join("")}</ul>`;
+  if(b.tbl)h+=`<div class="ttblwrap"><table class="ttbl">${b.tbl.map((r,i)=>`<tr>${r.map(cc=>i===0&&b.tbl.length>1&&b.tbl[0].length===r.length&&/^(구분|명칭|기호|항목|종류|적용|호칭)/.test(String(b.tbl[0][0]))?`<th>${cc}</th>`:`<td>${cc}</td>`).join("")}</tr>`).join("")}</table></div>`;
+  if(b.tip)h+=`<div class="ttip">💡 ${b.tip}</div>`;
+  return h;
+}
+function relatedQs(subject,keys){
+  if(!keys||!keys.length)return [];
+  const scan=(sameSubj)=>{const out=[];
+    EXAMS.forEach(e=>{e.questions.forEach(q=>{
+      if(sameSubj&&q.subject!==subject)return;
+      const hay=(q.q||"")+" "+(q.explain||"")+" "+(q.choices||[]).join(" ");
+      if(keys.some(k=>hay.indexOf(k)>=0))out.push({...q,_k:examKey(e)});
+    });});
+    return out;};
+  const same=scan(true);
+  return same.length?same:scan(false);   // 과목 내에 없으면 전 과목에서 찾기
+}
+function startTheoryQuiz(si,ci,ki){
+  const s=THEORY[si],k=s.chapters[ci].cards[ki];
+  let qs=relatedQs(s.subject,k.q||[]);
+  if(!qs.length){alert("관련 기출이 없습니다.");return;}
+  for(let i=qs.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[qs[i],qs[j]]=[qs[j],qs[i]];}
+  if(qs.length>25)qs=qs.slice(0,25);
+  STUDY={qs,i:0,picked:null,label:k.t,_back:()=>theoryCard(si,ci,ki)};
+  renderStudy();
 }
 
 /* ---------------- 오답노트 ---------------- */

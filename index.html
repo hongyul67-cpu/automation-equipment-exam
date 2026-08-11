@@ -101,6 +101,9 @@
   table.ttbl th{background:#eff6ff;color:var(--brand);font-weight:700}
   table.ttbl tr:nth-child(odd) td{background:#fafbfc}
   .ttip{margin-top:14px;background:#ecfdf5;border:1px solid #a7f3d0;border-radius:12px;padding:11px 13px;font-size:13.5px;color:#065f46;line-height:1.6}
+  .tfig{margin:16px 0 6px;text-align:center}
+  .tfig svg{width:100%;max-width:560px;height:auto;background:#fff;border:1px solid var(--line);border-radius:12px;padding:8px}
+  .tfig figcaption{font-size:12.5px;color:var(--muted);margin-top:7px;line-height:1.5}
   /* lesson(수업) mode */
   .steps{display:flex;gap:6px;margin-bottom:14px}
   .steps .step{flex:1;text-align:center;padding:9px 4px;border-radius:10px;background:#f1f5f9;color:#94a3b8;font-size:13px;font-weight:800}
@@ -158,6 +161,7 @@
 <script src="data/theory-04-safety.js"></script>
 <script src="data/theory-05-fluid.js"></script>
 <script src="data/theory-06-control.js"></script>
+<script src="data/theory-figs.js"></script>
 <script src="config.js"></script>
 <script>
 const $=(s,el=document)=>el.querySelector(s);
@@ -224,6 +228,10 @@ function gate(){
     <div class="row" style="margin-bottom:10px">반 <input id="inCls" placeholder="예: 2-3" style="flex:1;padding:10px;border:1px solid #cbd5e1;border-radius:10px;font-size:15px"></div>
     <div class="row">이름 <input id="inName" placeholder="예: 홍길동" style="flex:1;padding:10px;border:1px solid #cbd5e1;border-radius:10px;font-size:15px"></div>
     <div class="navbtns" style="margin-top:16px"><span></span><button class="btn primary" onclick="doLogin()">시작 ▶</button></div>
+    <div style="margin-top:18px;padding-top:16px;border-top:1px dashed var(--line);text-align:center">
+      <button class="btn ghost" style="width:100%" onclick="lessonPick()">🎓 선생님용 수업 모드 <span style="font-weight:400;color:var(--muted)">(이름 입력 없이 바로)</span></button>
+      <div style="font-size:12px;color:var(--muted);margin-top:8px">수업용 설명·빈칸·확인문제 화면입니다. 기록은 저장되지 않아요.</div>
+    </div>
   </div>`;
   const me=SYNC.me();if(me){$("#inCls").value=me.cls||"";$("#inName").value=me.name||"";}
   setTimeout(()=>{const el=$("#inName");if(el)el.focus();},50);
@@ -581,6 +589,13 @@ function reviewQuiz(){
 /* ---------------- 이론 학습 ---------------- */
 const THEORY=(window.THEORY||[]);
 function theoryCount(){return THEORY.reduce((a,s)=>a+s.chapters.reduce((b,c)=>b+c.cards.length,0),0);}
+const FIGS=(window.THEORY_FIGS||{});
+function figsHtml(subject,title){
+  const list=FIGS[subject+"|"+title];
+  if(!list||!list.length)return "";
+  return list.map(f=>`<figure class="tfig">${f.svg}${f.cap?`<figcaption>${esc(f.cap)}</figcaption>`:""}</figure>`).join("");
+}
+function cardBodyHtml(s,k){return (k.body||[]).map(renderBlock).join("")+figsHtml(s.subject,k.t);}
 function theoryPick(){
   if(!THEORY.length){app.innerHTML=`<button class="back" onclick="home()">← 홈</button><div class="card"><div class="empty">이론 데이터를 불러오지 못했습니다.</div></div>`;return;}
   const done=LS.getRead();
@@ -633,7 +648,7 @@ function theoryCard(si,ci,ki){
   <button class="back" onclick="theorySubject(${si})">← ${esc(s.subject)} 단원</button>
   <div class="card">
     <div class="qhead"><span class="qno">${esc(k.t)}</span><span class="qsubj">${esc(c.title)}</span></div>
-    <div class="tbody">${(k.body||[]).map(renderBlock).join("")}</div>
+    <div class="tbody">${cardBodyHtml(s,k)}</div>
     ${rel.length?`<button class="btn primary" style="width:100%;margin-top:16px" onclick="startTheoryQuiz(${si},${ci},${ki})">📝 관련 기출 ${rel.length}문제 풀기</button>`:""}
     <div class="navbtns">
       <button class="btn ghost" onclick="${prev||'theorySubject('+si+')'}" ${prev?"":"disabled"}>◀ 이전</button>
@@ -677,10 +692,11 @@ function startTheoryQuiz(si,ci,ki){
 let LESSON=null, BLANKS=[];
 function toggleBig(){document.body.classList.toggle("big");
   const b=$("#bigbtn"); if(b)b.textContent=document.body.classList.contains("big")?"🔍 글자 작게":"🔍 글자 크게";}
+function lessonHome(){ if(SYNC.on()&&!SYNC.me())gate(); else home(); }
 function lessonPick(){
-  if(!THEORY.length){app.innerHTML=`<button class="back" onclick="home()">← 홈</button><div class="card"><div class="empty">이론 데이터를 불러오지 못했습니다.</div></div>`;return;}
+  if(!THEORY.length){app.innerHTML=`<button class="back" onclick="lessonHome()">← 홈</button><div class="card"><div class="empty">이론 데이터를 불러오지 못했습니다.</div></div>`;return;}
   app.innerHTML=`
-  <button class="back" onclick="home()">← 홈</button>
+  <button class="back" onclick="lessonHome()">← ${SYNC.on()&&!SYNC.me()?"로그인 화면":"홈"}</button>
   <div class="card">
     <span class="pill">🎓 수업 모드</span>
     <h3 style="margin:10px 0 6px">과목 선택</h3>
@@ -722,11 +738,11 @@ function renderLesson(){
   BLANKS=[];
   let inner="";
   if(st===0){
-    inner=`<div class="tbody">${(k.body||[]).map(renderBlock).join("")}</div>
+    inner=`<div class="tbody">${cardBodyHtml(s,k)}</div>
       <div class="lessonnav"><span></span>
       <button class="btn primary" onclick="lessonStep(1)">빈칸 풀어보기 ▶</button></div>`;
   } else if(st===1){
-    const bodyHtml=(k.body||[]).map(renderBlock).join("");
+    const bodyHtml=cardBodyHtml(s,k);
     inner=`<div class="lhint">🙋 굵은 글씨가 <b>빈칸</b>이 되었습니다. 학생에게 물어보고 <b>빈칸을 눌러</b> 정답을 확인하세요.</div>
       <div class="tbody">${blankify(bodyHtml)}</div>
       <div class="lessonnav">

@@ -104,6 +104,42 @@
   .tfig{margin:16px 0 6px;text-align:center}
   .tfig svg{width:100%;max-width:560px;height:auto;background:#fff;border:1px solid var(--line);border-radius:12px;padding:8px}
   .tfig figcaption{font-size:12.5px;color:var(--muted);margin-top:7px;line-height:1.5}
+  /* slide(수업) mode */
+  .slidecard{display:flex;flex-direction:column}
+  .sl-top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px}
+  .sl-chip{background:#eef2ff;color:var(--brand);border-radius:999px;padding:4px 12px;font-size:12.5px;font-weight:800}
+  .sl-count{font-size:12.5px;color:var(--muted);font-weight:700;white-space:nowrap}
+  .sl-prog{height:5px;background:#e2e8f0;border-radius:999px;overflow:hidden;margin-bottom:16px}
+  .sl-prog>div{height:100%;background:var(--brand);border-radius:999px;transition:width .2s}
+  .sl{min-height:300px;display:flex;flex-direction:column;justify-content:center;min-width:0}
+  .sl>*{min-width:0;max-width:100%}
+  .sl-cover{align-items:center;text-align:center;gap:10px}
+  .sl-badge{display:inline-block;background:var(--brand);color:#fff;border-radius:999px;padding:5px 16px;font-size:13px;font-weight:800}
+  .sl-title{font-size:29px;font-weight:900;margin:14px 0 0;line-height:1.35;word-break:keep-all;letter-spacing:-.5px}
+  .sl-note{color:var(--muted);font-size:14px;margin-top:8px}
+  .sl-h{font-size:21px;font-weight:800;color:var(--brand);margin:0 0 16px;line-height:1.4;word-break:keep-all;
+    border-left:5px solid var(--brand);padding-left:11px}
+  .sl-ul{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:11px}
+  .sl-ul li{font-size:17.5px;line-height:1.6;word-break:keep-all;background:#f8fafc;border:1px solid var(--line);
+    border-radius:12px;padding:12px 15px;position:relative;padding-left:38px}
+  .sl-ul li:before{content:"•";position:absolute;left:16px;top:11px;color:var(--brand);font-size:20px;font-weight:900}
+  .sl-p{font-size:17.5px;line-height:1.75;margin:0;word-break:keep-all;background:#f8fafc;border-radius:12px;padding:16px 18px}
+  table.sl-tbl{font-size:15.5px}
+  table.sl-tbl td,table.sl-tbl th{padding:11px 12px}
+  .sl-tipwrap{justify-content:center}
+  .sl-tip{background:#ecfdf5;border:2px solid #6ee7b7;border-radius:16px;padding:22px 24px;font-size:18px;
+    line-height:1.7;color:#065f46;word-break:keep-all;text-align:center}
+  .sl-tip>b{display:block;color:#047857;font-size:15px;margin-bottom:10px}
+  .sl-tip div b{color:#065f46;background:#d1fae5;border-radius:5px;padding:0 5px}
+  .slidecard .tfig{margin:0}
+  .slidecard .tfig svg{max-width:100%;border:0;padding:0}
+  body.big .sl-title{font-size:38px}
+  body.big .sl-h{font-size:27px}
+  body.big .sl-ul li{font-size:23px;padding:15px 18px 15px 42px}
+  body.big .sl-p{font-size:23px}
+  body.big table.sl-tbl{font-size:20px}
+  body.big .sl-tip{font-size:23px}
+  body.big .sl{min-height:400px}
   /* lesson(수업) mode */
   .steps{display:flex;gap:6px;margin-bottom:14px}
   .steps .step{flex:1;text-align:center;padding:9px 4px;border-radius:10px;background:#f1f5f9;color:#94a3b8;font-size:13px;font-weight:800}
@@ -726,7 +762,63 @@ function lessonChapters(si){
     </div>
   </div>`;
 }
-function lessonStart(si,ci){LESSON={si,ci,ki:0,step:0,quiz:null};renderLesson();}
+function lessonStart(si,ci){LESSON={si,ci,ki:0,slide:0,slides:[],blanked:false,phase:"slide",quiz:null};
+  LESSON.slides=buildSlides(THEORY[si],THEORY[si].chapters[ci].cards[0]);renderLesson();}
+
+/* --- 개념 카드를 수업용 슬라이드로 자동 분할 --- */
+const SLIDE_LIST=5, SLIDE_ROWS=6, SLIDE_CHARS=210;
+function plain(x){return String(x).replace(/<[^>]+>/g,"");}
+/* 개수와 글자수를 함께 고려해 슬라이드 단위로 나눔 */
+function chunk(items,maxCount,maxChars,textOf){
+  const out=[];let cur=[],len=0;
+  items.forEach(it=>{
+    const L=plain(textOf(it)).length;
+    if(cur.length&&(cur.length>=maxCount||len+L>maxChars)){out.push(cur);cur=[];len=0;}
+    cur.push(it);len+=L;
+  });
+  if(cur.length)out.push(cur);
+  return out;
+}
+function buildSlides(s,k){
+  const out=[{kind:"cover",title:k.t,sub:s.subject}];
+  const figs=FIGS[s.subject+"|"+k.t]||[];
+  figs.forEach(f=>out.push({kind:"fig",svg:f.svg,cap:f.cap}));
+  (k.body||[]).forEach(b=>{
+    if(b.ul&&b.ul.length){
+      const parts=chunk(b.ul,SLIDE_LIST,SLIDE_CHARS,x=>x);
+      parts.forEach((p,i)=>out.push({kind:"list",
+        title:(b.h||"")+(parts.length>1?` (${i+1}/${parts.length})`:""),items:p}));
+    } else if(b.tbl&&b.tbl.length){
+      const hasHead=/^(구분|명칭|기호|항목|종류|적용|호칭|회로|급수|용어|기입)/.test(String(b.tbl[0][0]));
+      const head=hasHead?b.tbl[0]:null, rows=hasHead?b.tbl.slice(1):b.tbl;
+      const parts=chunk(rows,SLIDE_ROWS,SLIDE_CHARS,r=>r.join(""));
+      parts.forEach((p,i)=>out.push({kind:"table",
+        title:(b.h||"")+(parts.length>1?` (${i+1}/${parts.length})`:""),head:head,rows:p}));
+    } else if(b.p){
+      out.push({kind:"text",title:b.h||"",p:b.p});
+    } else if(b.tip){
+      out.push({kind:"tip",text:b.tip});
+    }
+  });
+  return out;
+}
+function slideHtml(sl){
+  if(sl.kind==="cover")return `<div class="sl sl-cover">
+    <div class="sl-badge">${esc(sl.sub)}</div><h2 class="sl-title">${esc(sl.title)}</h2>
+    <div class="sl-note">이 개념을 함께 알아봅시다</div></div>`;
+  if(sl.kind==="fig")return `<div class="sl"><figure class="tfig">${sl.svg}${sl.cap?`<figcaption>${esc(sl.cap)}</figcaption>`:""}</figure></div>`;
+  if(sl.kind==="list")return `<div class="sl">${sl.title?`<h2 class="sl-h">${sl.title}</h2>`:""}
+    <ul class="sl-ul">${sl.items.map(x=>`<li>${x}</li>`).join("")}</ul></div>`;
+  if(sl.kind==="table")return `<div class="sl">${sl.title?`<h2 class="sl-h">${sl.title}</h2>`:""}
+    <div class="ttblwrap"><table class="ttbl sl-tbl">
+    ${sl.head?`<tr>${sl.head.map(c=>`<th>${c}</th>`).join("")}</tr>`:""}
+    ${sl.rows.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join("")}</tr>`).join("")}
+    </table></div></div>`;
+  if(sl.kind==="text")return `<div class="sl">${sl.title?`<h2 class="sl-h">${sl.title}</h2>`:""}
+    <p class="sl-p">${sl.p}</p></div>`;
+  if(sl.kind==="tip")return `<div class="sl sl-tipwrap"><div class="sl-tip"><b>💡 이것만은 꼭!</b><div>${sl.text}</div></div></div>`;
+  return "";
+}
 const MAX_BLANKS=18;
 function blankify(html){
   const total=(String(html).match(/<b>[\s\S]*?<\/b>/g)||[]).length;
@@ -742,55 +834,75 @@ function revealBlank(i){const el=$("#blk"+i);if(!el||el.classList.contains("on")
   el.innerHTML=BLANKS[i];el.classList.add("on");}
 function revealAll(){BLANKS.forEach((v,i)=>revealBlank(i));}
 function renderLesson(){
-  const s=THEORY[LESSON.si],c=s.chapters[LESSON.ci],k=c.cards[LESSON.ki],st=LESSON.step;
-  BLANKS=[];
-  let inner="";
-  if(st===0){
-    inner=`<div class="tbody">${cardBodyHtml(s,k)}</div>
-      <div class="lessonnav"><span></span>
-      <button class="btn primary" onclick="lessonStep(1)">빈칸 풀어보기 ▶</button></div>`;
-  } else if(st===1){
-    const bodyHtml=cardBodyHtml(s,k);
-    inner=`<div class="lhint">🙋 굵은 글씨가 <b>빈칸</b>이 되었습니다. 학생에게 물어보고 <b>빈칸을 눌러</b> 정답을 확인하세요.</div>
-      <div class="tbody">${blankify(bodyHtml)}</div>
-      <div class="lessonnav">
-        <button class="btn ghost" onclick="lessonStep(0)">◀ 설명 다시</button>
-        <button class="btn ghost" onclick="revealAll()">✅ 정답 모두 보기</button>
-        <button class="btn primary" onclick="lessonStep(2)">확인문제 ▶</button></div>`;
-  } else {
-    inner=lessonQuizHtml();
-  }
+  const s=THEORY[LESSON.si],c=s.chapters[LESSON.ci],k=c.cards[LESSON.ki];
   LS.markRead(s.subject+"|"+k.t);
+  BLANKS=[];
+  const quiz=LESSON.phase==="quiz";
+  const N=LESSON.slides.length, cur=LESSON.slide;
+  let inner,foot;
+  if(quiz){
+    inner=lessonQuizHtml();foot="";
+  } else {
+    const sl=LESSON.slides[cur];
+    let body=slideHtml(sl);
+    const blankable=/<b>/.test(body);
+    if(LESSON.blanked&&blankable)body=blankify(body);
+    inner=`${LESSON.blanked&&blankable?`<div class="lhint">🙋 빈칸을 학생에게 물어보고 <b>빈칸을 눌러</b> 정답을 확인하세요.</div>`:""}${body}`;
+    foot=`<div class="lessonnav">
+      <button class="btn ghost" onclick="lessonSlide(-1)" ${cur===0?"disabled":""}>◀ 이전</button>
+      ${blankable?`<button class="btn ${LESSON.blanked?"primary":"ghost"}" onclick="toggleBlank()">${LESSON.blanked?"✅ 정답 모두 보기":"🙈 빈칸으로 가리기"}</button>`:""}
+      ${cur<N-1
+        ? `<button class="btn primary" onclick="lessonSlide(1)">다음 ▶</button>`
+        : `<button class="btn primary" onclick="lessonToQuiz()">📝 확인문제 ▶</button>`}
+    </div>`;
+  }
   app.innerHTML=`
   <div class="row" style="justify-content:space-between;color:#fff;margin-bottom:8px">
     <button class="back" onclick="lessonChapters(${LESSON.si})">← 단원 선택</button>
-    <button class="back" id="bigbtn" onclick="toggleBig()">${document.body.classList.contains("big")?"🔍 글자 작게":"🔍 글자 크게"}</button>
+    <span style="color:#c7d2fe;font-size:12.5px">${esc(s.subject)} · 개념 ${LESSON.ki+1}/${c.cards.length}</span>
+    <button class="back" id="bigbtn" onclick="toggleBig()">${document.body.classList.contains("big")?"🔍 작게":"🔍 크게"}</button>
   </div>
-  <div class="card">
-    <div class="steps">
-      <div class="step ${st===0?"on":""}">① 설명</div>
-      <div class="step ${st===1?"on":""}">② 빈칸</div>
-      <div class="step ${st===2?"on":""}">③ 확인문제</div>
+  <div class="card slidecard">
+    <div class="sl-top">
+      <span class="sl-chip">${esc(k.t)}</span>
+      <span class="sl-count">${quiz?"확인문제":`${cur+1} / ${N}`}</span>
     </div>
-    <div class="qhead"><span class="qno">${esc(k.t)}</span>
-      <span class="qsubj">${esc(c.title)} · 개념 ${LESSON.ki+1}/${c.cards.length}</span></div>
+    <div class="sl-prog"><div style="width:${quiz?100:Math.round((cur+1)/N*100)}%"></div></div>
     ${inner}
+    ${foot}
   </div>`;
   window.scrollTo(0,0);
 }
-function lessonStep(n){
-  LESSON.step=n;
-  if(n===2&&!LESSON.quiz){
+function lessonSlide(d){
+  const n=LESSON.slide+d;
+  if(n<0||n>=LESSON.slides.length)return;
+  LESSON.slide=n;LESSON.blanked=false;renderLesson();
+}
+function toggleBlank(){
+  if(LESSON.blanked){revealAll();LESSON.blanked=false;
+    const b=$("#app");renderLesson();return;}
+  LESSON.blanked=true;renderLesson();
+}
+function lessonToQuiz(){
+  if(!LESSON.quiz){
     let qs=relatedQs(THEORY[LESSON.si].subject,THEORY[LESSON.si].chapters[LESSON.ci].cards[LESSON.ki].q||[]);
     for(let i=qs.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[qs[i],qs[j]]=[qs[j],qs[i]];}
     LESSON.quiz={qs:qs.slice(0,3),i:0,picked:null};
   }
-  renderLesson();
+  LESSON.phase="quiz";renderLesson();
 }
+function lessonBackToSlides(){LESSON.phase="slide";renderLesson();}
+/* 키보드 ← → 로 슬라이드 넘기기 */
+document.addEventListener("keydown",e=>{
+  if(!LESSON||LESSON.phase==="quiz")return;
+  if(e.key==="ArrowRight"||e.key===" "){e.preventDefault();
+    if(LESSON.slide<LESSON.slides.length-1)lessonSlide(1);else lessonToQuiz();}
+  else if(e.key==="ArrowLeft"){e.preventDefault();lessonSlide(-1);}
+});
 function lessonQuizHtml(){
   const qz=LESSON.quiz;
   if(!qz||!qz.qs.length)return `<div class="empty">이 개념의 확인문제가 없습니다.</div>
-    <div class="lessonnav"><button class="btn ghost" onclick="lessonStep(1)">◀ 빈칸</button>
+    <div class="lessonnav"><button class="btn ghost" onclick="lessonBackToSlides()">◀ 설명</button>
     <button class="btn primary" onclick="lessonNextCard()">다음 개념 ▶</button></div>`;
   const q=qz.qs[qz.i],done=qz.picked!=null;
   return `<div class="lhint">📝 확인문제 ${qz.i+1} / ${qz.qs.length} · ${esc(q._k)} 기출</div>
@@ -804,7 +916,7 @@ function lessonQuizHtml(){
     </div>
     <div class="expl ${done?"show":""}">${done?`<b class="ansline">✅ 정답 ${NUM[q.answer]}번${q.choicesImg?" (위 그림 참고)":""}</b>`:""}<b>해설</b> · ${esc(q.explain)}</div>
     <div class="lessonnav">
-      <button class="btn ghost" onclick="lessonStep(1)">◀ 빈칸</button>
+      <button class="btn ghost" onclick="lessonBackToSlides()">◀ 설명</button>
       ${qz.i<qz.qs.length-1
         ? `<button class="btn primary" onclick="lessonNextQ()">다음 문제 ▶</button>`
         : `<button class="btn primary" onclick="lessonNextCard()">다음 개념 ▶</button>`}
@@ -817,9 +929,11 @@ function lessonAnswer(n){LESSON.quiz.picked=n;
   SYNC.saveSoon();renderLesson();}
 function lessonNextQ(){LESSON.quiz.i++;LESSON.quiz.picked=null;renderLesson();}
 function lessonNextCard(){
-  const c=THEORY[LESSON.si].chapters[LESSON.ci];
-  if(LESSON.ki<c.cards.length-1){LESSON.ki++;LESSON.step=0;LESSON.quiz=null;renderLesson();}
-  else lessonDone();
+  const s=THEORY[LESSON.si],c=s.chapters[LESSON.ci];
+  if(LESSON.ki<c.cards.length-1){
+    LESSON.ki++;LESSON.slide=0;LESSON.blanked=false;LESSON.phase="slide";LESSON.quiz=null;
+    LESSON.slides=buildSlides(s,c.cards[LESSON.ki]);renderLesson();
+  } else lessonDone();
 }
 function lessonDone(){
   const s=THEORY[LESSON.si],c=s.chapters[LESSON.ci];

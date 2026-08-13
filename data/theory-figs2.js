@@ -385,7 +385,7 @@ f(`<svg viewBox="0 0 520 140" xmlns="http://www.w3.org/2000/svg" style="${S}">
 </g></svg>`,"서비스 유닛 설치 순서: 필터 → 압력조절기 → 윤활기")],
 
 "전기·제어|유압 실린더와 부속장치 ★★":[
-f(`<svg viewBox="0 0 520 174" xmlns="http://www.w3.org/2000/svg" style="${S}">
+f(`<svg viewBox="0 0 520 182" xmlns="http://www.w3.org/2000/svg" style="${S}">
 <g font-size="11" fill="#0f172a" stroke="#334155" stroke-width="1.5">
 <g transform="translate(14,22)"><rect x="0" y="0" width="90" height="34" fill="#f1f5f9"/><rect x="26" y="4" width="14" height="26" fill="#94a3b8"/>
 <line x1="40" y1="17" x2="110" y2="17" stroke-width="3"/><path d="M60 4 q8 13 0 26" fill="none" stroke="#16a34a"/>
@@ -397,7 +397,7 @@ f(`<svg viewBox="0 0 520 174" xmlns="http://www.w3.org/2000/svg" style="${S}">
 <line x1="-24" y1="17" x2="52" y2="17" stroke-width="3"/><line x1="38" y1="17" x2="114" y2="17" stroke-width="3"/>
 <text x="0" y="52" stroke="none" font-weight="700">복동 양로드</text><text x="-6" y="66" stroke="none" font-size="10">전·후진 속도·힘 같음</text></g>
 <g transform="translate(14,104)"><rect x="0" y="0" width="60" height="30" fill="#f1f5f9"/><rect x="60" y="5" width="46" height="20" fill="#e2e8f0"/><rect x="106" y="9" width="36" height="12" fill="#cbd5e1"/>
-<text x="0" y="48" stroke="none" font-weight="700">텔레스코프</text><text x="0" y="60" stroke="none" font-size="10">다단 → 긴 행정</text></g>
+<text x="0" y="50" stroke="none" font-weight="700">텔레스코프</text><text x="0" y="64" stroke="none" font-size="10">다단 → 긴 행정</text></g>
 <text x="230" y="112" stroke="none" font-weight="700" fill="#2563eb">지지(설치) 형식</text>
 <text x="232" y="132" stroke="none">고정형 : 풋형 · 플랜지형</text>
 <text x="232" y="150" stroke="none">요동형 : <tspan font-weight="700">클레비스형 · 트러니언형</tspan></text>

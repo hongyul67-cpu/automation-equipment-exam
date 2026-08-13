@@ -40,7 +40,7 @@ f(`<svg viewBox="0 0 520 155" xmlns="http://www.w3.org/2000/svg" style="${S}">
 </g></svg>`,"온도가 올라가도 경도를 유지하는 정도(고온경도)가 공구재료의 핵심")],
 
 "기계가공·측정|드릴링·보링 머신":[
-f(`<svg viewBox="0 0 520 178" xmlns="http://www.w3.org/2000/svg" style="${S}">
+f(`<svg viewBox="0 0 520 186" xmlns="http://www.w3.org/2000/svg" style="${S}">
 <g font-size="11" fill="#0f172a" stroke="#334155" stroke-width="1.5">
 <g transform="translate(24,22)"><rect x="20" y="0" width="14" height="46" fill="#e2e8f0"/><path d="M27 46 v18 l-5 8 h10 l-5 -8" fill="#94a3b8"/>
 <rect x="0" y="76" width="70" height="12" fill="#f1f5f9"/><text x="0" y="112" stroke="none" font-weight="700">탁상 드릴링</text><text x="0" y="126" stroke="none" font-size="10">φ13 이하 작은 구멍</text></g>
@@ -53,7 +53,7 @@ f(`<svg viewBox="0 0 520 178" xmlns="http://www.w3.org/2000/svg" style="${S}">
 <circle cx="30" cy="53" r="10" fill="#fff"/><circle cx="66" cy="53" r="10" fill="#fff"/>
 <circle cx="30" cy="53" r="3" fill="#dc2626" stroke="none"/><circle cx="66" cy="53" r="3" fill="#dc2626" stroke="none"/>
 <text x="0" y="112" stroke="none" font-weight="700">지그 보링</text><text x="-4" y="126" stroke="none" font-size="10">정밀한 구멍 <tspan font-weight="700">위치</tspan></text></g>
-<text x="14" y="170" stroke="none" font-size="11">드릴링 머신 크기 = 뚫을 수 있는 최대 지름 · 주축~테이블 거리 · 주축 이송거리</text>
+<text x="14" y="176" stroke="none" font-size="10.5">드릴링 머신 크기 = 뚫을 수 있는 최대 지름 · 주축~테이블 거리 · 주축 이송거리</text>
 </g></svg>`,"큰 공작물은 레이디얼, 정밀한 구멍 위치는 지그 보링")],
 
 "기계가공·측정|기어가공·정밀입자가공·특수가공":[

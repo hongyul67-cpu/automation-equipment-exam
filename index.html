@@ -111,8 +111,9 @@
   .sl-count{font-size:12.5px;color:var(--muted);font-weight:700;white-space:nowrap}
   .sl-prog{height:5px;background:#e2e8f0;border-radius:999px;overflow:hidden;margin-bottom:16px}
   .sl-prog>div{height:100%;background:var(--brand);border-radius:999px;transition:width .2s}
-  .sl{min-height:300px;display:flex;flex-direction:column;justify-content:center;min-width:0}
+  .sl{min-height:300px;display:flex;flex-direction:column;justify-content:center;min-width:0;overflow-wrap:anywhere}
   .sl>*{min-width:0;max-width:100%}
+  .sl-title,.sl-h,.sl-ul li,.sl-p,.sl-tip{overflow-wrap:anywhere}
   .sl-cover{align-items:center;text-align:center;gap:10px}
   .sl-badge{display:inline-block;background:var(--brand);color:#fff;border-radius:999px;padding:5px 16px;font-size:13px;font-weight:800}
   .sl-title{font-size:29px;font-weight:900;margin:14px 0 0;line-height:1.35;word-break:keep-all;letter-spacing:-.5px}
@@ -140,6 +141,36 @@
   body.big table.sl-tbl{font-size:20px}
   body.big .sl-tip{font-size:23px}
   body.big .sl{min-height:400px}
+  /* ── 전자칠판 모드: 큰 화면 + 손가락 터치 ── */
+  body.board .wrap{max-width:1400px;padding:14px 22px 40px}
+  body.board .slidecard{padding:26px 30px}
+  body.board .sl{min-height:58vh}
+  body.board .sl-title{font-size:clamp(30px,4.4vw,60px)}
+  body.board .sl-h{font-size:clamp(22px,2.5vw,36px);border-left-width:7px;padding-left:15px;margin-bottom:20px}
+  body.board .sl-ul{gap:14px}
+  body.board .sl-ul li{font-size:clamp(18px,1.85vw,28px);padding:16px 20px 16px 50px;border-radius:14px}
+  body.board .sl-ul li:before{left:20px;top:14px;font-size:26px}
+  body.board .sl-p{font-size:clamp(18px,1.85vw,28px);padding:20px 24px}
+  body.board table.sl-tbl{font-size:clamp(16px,1.55vw,24px)}
+  body.board table.sl-tbl td,body.board table.sl-tbl th{padding:14px 16px}
+  body.board .sl-tip{font-size:clamp(19px,1.95vw,30px);padding:26px 30px}
+  body.board .sl-tip>b{font-size:clamp(15px,1.4vw,21px)}
+  body.board .sl-badge{font-size:clamp(13px,1.2vw,19px);padding:7px 20px}
+  body.board .sl-chip{font-size:clamp(13px,1.2vw,19px);padding:6px 16px}
+  body.board .sl-count{font-size:clamp(13px,1.2vw,19px)}
+  body.board .sl-prog{height:8px}
+  body.board .tfig svg{max-width:min(100%,980px)}
+  body.board .blk{min-width:90px;font-size:clamp(18px,1.85vw,28px);padding:2px 16px}
+  body.board .lhint{font-size:clamp(14px,1.4vw,21px);padding:14px 18px}
+  /* 터치 버튼 크게 */
+  body.board .lessonnav{gap:14px;margin-top:24px}
+  body.board .lessonnav .btn{min-height:64px;font-size:clamp(16px,1.6vw,24px);border-radius:14px}
+  body.board .back{font-size:clamp(14px,1.4vw,20px);padding:10px 6px}
+  body.board .qtext{font-size:clamp(19px,1.9vw,30px)}
+  body.board .choice{font-size:clamp(17px,1.75vw,27px);padding:16px 18px;border-radius:14px}
+  body.board .expl{font-size:clamp(16px,1.6vw,24px)}
+  body.board .titem{font-size:clamp(16px,1.6vw,24px);padding:18px 20px}
+  body.board .btn{padding:14px 20px}
   /* lesson(수업) mode */
   .steps{display:flex;gap:6px;margin-bottom:14px}
   .steps .step{flex:1;text-align:center;padding:9px 4px;border-radius:10px;background:#f1f5f9;color:#94a3b8;font-size:13px;font-weight:800}
@@ -728,8 +759,9 @@ function startTheoryQuiz(si,ci,ki){
 
 /* ---------------- 수업 모드 (설명→빈칸→정답→문제) ---------------- */
 let LESSON=null, BLANKS=[];
-function toggleBig(){document.body.classList.toggle("big");
-  const b=$("#bigbtn"); if(b)b.textContent=document.body.classList.contains("big")?"🔍 글자 작게":"🔍 글자 크게";}
+function toggleBig(){document.body.classList.toggle("board");
+  if(LESSON&&LESSON.phase)renderLesson();
+  else{const b=$("#bigbtn");if(b)b.textContent=document.body.classList.contains("board")?"📺 칠판 끄기":"📺 전자칠판";}}
 function lessonHome(){ if(SYNC.on()&&!SYNC.me())gate(); else home(); }
 function lessonPick(){
   if(!THEORY.length){app.innerHTML=`<button class="back" onclick="lessonHome()">← 홈</button><div class="card"><div class="empty">이론 데이터를 불러오지 못했습니다.</div></div>`;return;}
@@ -763,7 +795,9 @@ function lessonChapters(si){
   </div>`;
 }
 function lessonStart(si,ci){LESSON={si,ci,ki:0,slide:0,slides:[],blanked:false,phase:"slide",quiz:null};
+  document.body.classList.add("board");           // 수업 모드 = 전자칠판 모드로 시작
   LESSON.slides=buildSlides(THEORY[si],THEORY[si].chapters[ci].cards[0]);renderLesson();}
+function exitBoard(){document.body.classList.remove("board");}
 
 /* --- 개념 카드를 수업용 슬라이드로 자동 분할 --- */
 const SLIDE_LIST=5, SLIDE_ROWS=6, SLIDE_CHARS=210;
@@ -858,9 +892,9 @@ function renderLesson(){
   }
   app.innerHTML=`
   <div class="row" style="justify-content:space-between;color:#fff;margin-bottom:8px">
-    <button class="back" onclick="lessonChapters(${LESSON.si})">← 단원 선택</button>
+    <button class="back" onclick="exitBoard();lessonChapters(${LESSON.si})">← 단원 선택</button>
     <span style="color:#c7d2fe;font-size:12.5px">${esc(s.subject)} · 개념 ${LESSON.ki+1}/${c.cards.length}</span>
-    <button class="back" id="bigbtn" onclick="toggleBig()">${document.body.classList.contains("big")?"🔍 작게":"🔍 크게"}</button>
+    <button class="back" id="bigbtn" onclick="toggleBig()">${document.body.classList.contains("board")?"📺 칠판 끄기":"📺 전자칠판"}</button>
   </div>
   <div class="card slidecard">
     <div class="sl-top">
@@ -938,14 +972,14 @@ function lessonNextCard(){
 function lessonDone(){
   const s=THEORY[LESSON.si],c=s.chapters[LESSON.ci];
   app.innerHTML=`
-  <button class="back" onclick="lessonChapters(${LESSON.si})">← 단원 선택</button>
+  <button class="back" onclick="exitBoard();lessonChapters(${LESSON.si})">← 단원 선택</button>
   <div class="card" style="text-align:center">
     <div style="font-size:52px;margin:10px 0">🎉</div>
     <h3 style="margin:0 0 6px">수업 완료!</h3>
     <p style="color:var(--muted);font-size:14px">${esc(s.subject)} · ${esc(c.title)}<br>개념 <b>${c.cards.length}개</b>를 모두 학습했습니다.</p>
     <div class="navbtns" style="margin-top:18px">
-      <button class="btn ghost" onclick="lessonChapters(${LESSON.si})">다른 단원</button>
-      <button class="btn primary" onclick="studyPick()">문제 더 풀기</button>
+      <button class="btn ghost" onclick="exitBoard();lessonChapters(${LESSON.si})">다른 단원</button>
+      <button class="btn primary" onclick="exitBoard();studyPick()">문제 더 풀기</button>
     </div>
   </div>`;
 }

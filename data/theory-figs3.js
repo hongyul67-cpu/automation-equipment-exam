@@ -9,7 +9,7 @@ f(`<svg viewBox="0 0 520 150" xmlns="http://www.w3.org/2000/svg" style="${S}">
 <g font-size="12" fill="#0f172a" stroke="#334155" stroke-width="1.3">
 <text x="40" y="46" stroke="none" font-size="30" font-weight="700" letter-spacing="4">SM45C</text>
 <line x1="48" y1="56" x2="48" y2="72" stroke-width="1"/><line x1="86" y1="56" x2="86" y2="72" stroke-width="1"/><line x1="132" y1="56" x2="132" y2="72" stroke-width="1"/>
-<text x="26" y="88" stroke="none" font-size="11">S=강</text><text x="70" y="88" stroke="none" font-size="11">M=기계구조</text><text x="120" y="88" stroke="none" font-size="11">45C</text>
+<text x="26" y="88" stroke="none" font-size="11">S=강</text><text x="62" y="88" stroke="none" font-size="10.5">M=기계구조</text><text x="140" y="88" stroke="none" font-size="10.5">45C</text>
 <text x="40" y="112" stroke="none" font-size="12.5">→ 탄소 함유량 <tspan font-weight="700" fill="#dc2626">0.45%</tspan></text>
 <line x1="250" y1="14" x2="250" y2="140" stroke-dasharray="5 4" stroke-width="1"/>
 <text x="270" y="30" stroke="none" font-weight="700" fill="#2563eb">숫자의 의미 구분</text>
@@ -40,7 +40,7 @@ f(`<svg viewBox="0 0 520 155" xmlns="http://www.w3.org/2000/svg" style="${S}">
 </g></svg>`,"온도가 올라가도 경도를 유지하는 정도(고온경도)가 공구재료의 핵심")],
 
 "기계가공·측정|드릴링·보링 머신":[
-f(`<svg viewBox="0 0 520 150" xmlns="http://www.w3.org/2000/svg" style="${S}">
+f(`<svg viewBox="0 0 520 178" xmlns="http://www.w3.org/2000/svg" style="${S}">
 <g font-size="11" fill="#0f172a" stroke="#334155" stroke-width="1.5">
 <g transform="translate(24,22)"><rect x="20" y="0" width="14" height="46" fill="#e2e8f0"/><path d="M27 46 v18 l-5 8 h10 l-5 -8" fill="#94a3b8"/>
 <rect x="0" y="76" width="70" height="12" fill="#f1f5f9"/><text x="0" y="112" stroke="none" font-weight="700">탁상 드릴링</text><text x="0" y="126" stroke="none" font-size="10">φ13 이하 작은 구멍</text></g>
@@ -53,7 +53,7 @@ f(`<svg viewBox="0 0 520 150" xmlns="http://www.w3.org/2000/svg" style="${S}">
 <circle cx="30" cy="53" r="10" fill="#fff"/><circle cx="66" cy="53" r="10" fill="#fff"/>
 <circle cx="30" cy="53" r="3" fill="#dc2626" stroke="none"/><circle cx="66" cy="53" r="3" fill="#dc2626" stroke="none"/>
 <text x="0" y="112" stroke="none" font-weight="700">지그 보링</text><text x="-4" y="126" stroke="none" font-size="10">정밀한 구멍 <tspan font-weight="700">위치</tspan></text></g>
-<text x="14" y="146" stroke="none" font-size="11">드릴링 머신 크기 = 뚫을 수 있는 최대 지름 · 주축~테이블 거리 · 주축 이송거리</text>
+<text x="14" y="170" stroke="none" font-size="11">드릴링 머신 크기 = 뚫을 수 있는 최대 지름 · 주축~테이블 거리 · 주축 이송거리</text>
 </g></svg>`,"큰 공작물은 레이디얼, 정밀한 구멍 위치는 지그 보링")],
 
 "기계가공·측정|기어가공·정밀입자가공·특수가공":[
@@ -98,7 +98,7 @@ f(`<svg viewBox="0 0 520 150" xmlns="http://www.w3.org/2000/svg" style="${S}">
 </g></svg>`,"G00은 급속(점선), G01은 직선 절삭, G02/G03은 원호")],
 
 "기계요소·조립|정비용 공구와 측정기구":[
-f(`<svg viewBox="0 0 520 145" xmlns="http://www.w3.org/2000/svg" style="${S}">
+f(`<svg viewBox="0 0 520 168" xmlns="http://www.w3.org/2000/svg" style="${S}">
 <g font-size="11" fill="#0f172a" stroke="#334155" stroke-width="1.5">
 <g transform="translate(22,26)"><circle cx="34" cy="34" r="24" fill="#f1f5f9"/><circle cx="34" cy="34" r="9" fill="#fff"/>
 <path d="M10 34 h-10 M58 34 h10" stroke-width="2"/><path d="M34 4 v-8" stroke-width="2"/>
@@ -114,7 +114,7 @@ f(`<svg viewBox="0 0 520 145" xmlns="http://www.w3.org/2000/svg" style="${S}">
 <text x="414" y="52" stroke="none" font-weight="700" fill="#2563eb" font-size="13">T = F × L</text>
 <text x="410" y="74" stroke="none" font-size="10.5">길수록 작은 힘으로</text>
 <text x="410" y="90" stroke="none" font-size="10.5">큰 토크</text>
-<text x="22" y="138" stroke="none" font-size="11">검사 단계 : 소재 검사 → 부품 검사 → 조립 검사 → 성능 검사</text>
+<text x="22" y="160" stroke="none" font-size="11">검사 단계 : 소재 검사 → 부품 검사 → 조립 검사 → 성능 검사</text>
 </g></svg>`,"부러진 볼트=스크류 엑스트랙터, 기어 빼기=기어 풀러")],
 
 "기계요소·조립|벨트·체인 전동장치 ★":[
@@ -141,7 +141,7 @@ f(`<svg viewBox="0 0 520 150" xmlns="http://www.w3.org/2000/svg" style="${S}">
 </g></svg>`,"V벨트는 M이 가장 작고 E가 가장 큼 / 체인은 미끄럼 없으나 고속 부적합")],
 
 "작업안전|산업안전의 목적과 무재해 운동":[
-f(`<svg viewBox="0 0 520 140" xmlns="http://www.w3.org/2000/svg" style="${S}">
+f(`<svg viewBox="0 0 520 152" xmlns="http://www.w3.org/2000/svg" style="${S}">
 <g font-size="12" fill="#0f172a" stroke="#334155" stroke-width="1.4">
 <text x="14" y="18" fill="#2563eb" stroke="none" font-weight="700" font-size="12.5">안전의 3요소 (3E)</text>
 <g transform="translate(20,26)">
@@ -156,7 +156,7 @@ f(`<svg viewBox="0 0 520 140" xmlns="http://www.w3.org/2000/svg" style="${S}">
 <text x="4" y="52" stroke="none" font-size="10">재해는 원래</text><text x="14" y="66" stroke="none" font-size="10">없어야 함</text>
 <text x="100" y="52" stroke="none" font-size="10">사전에 예측·</text><text x="116" y="66" stroke="none" font-size="10">대응</text>
 <text x="196" y="52" stroke="none" font-size="10">전원이 적극</text><text x="210" y="66" stroke="none" font-size="10">참여</text>
-<text x="0" y="92" stroke="none" font-size="10.5">3요소 : 최고경영자 경영자세 · 관리감독자 안전보건 추진 · 직장 자주활동</text></g>
+<text x="-206" y="106" stroke="none" font-size="9.5">3요소 : 최고경영자 경영자세 · 관리감독자 안전보건 추진 · 직장 자주활동</text></g>
 </g></svg>`,"안전 3요소 = 교육·기술·관리 / 무재해 3원칙 = 무·선취·참가")],
 
 "작업안전|재해의 원인과 재해율 계산 ★★":[
@@ -203,7 +203,7 @@ f(`<svg viewBox="0 0 520 145" xmlns="http://www.w3.org/2000/svg" style="${S}">
 </g></svg>`,"프레스의 대표 위험요소는 끼임(협착)")],
 
 "작업안전|용접·연삭 등 특수작업 안전":[
-f(`<svg viewBox="0 0 520 140" xmlns="http://www.w3.org/2000/svg" style="${S}">
+f(`<svg viewBox="0 0 520 152" xmlns="http://www.w3.org/2000/svg" style="${S}">
 <g font-size="11" fill="#0f172a" stroke="#334155" stroke-width="1.5">
 <text x="14" y="16" fill="#2563eb" stroke="none" font-weight="700" font-size="12">연삭 숫돌 안전</text>
 <g transform="translate(24,24)">
@@ -268,7 +268,7 @@ f(`<svg viewBox="0 0 520 150" xmlns="http://www.w3.org/2000/svg" style="${S}">
 </g></svg>`,"고속 회전이 캐비테이션 원인 — ‘저속’ 보기는 오답")],
 
 "전기·제어|공유압 기호 읽기":[
-f(`<svg viewBox="0 0 520 150" xmlns="http://www.w3.org/2000/svg" style="${S}">
+f(`<svg viewBox="0 0 520 162" xmlns="http://www.w3.org/2000/svg" style="${S}">
 <g font-size="10.5" fill="#0f172a" stroke="#334155" stroke-width="1.5">
 <g transform="translate(24,24)"><path d="M24 0 l24 24 l-24 24 l-24 -24 z" fill="none"/><path d="M8 8 l32 32" stroke-width="1.6"/>
 <text x="2" y="66" stroke="none" font-weight="700">냉각기</text><text x="-6" y="80" stroke="none">마름모+대각선</text></g>
@@ -280,8 +280,8 @@ f(`<svg viewBox="0 0 520 150" xmlns="http://www.w3.org/2000/svg" style="${S}">
 <text x="4" y="66" stroke="none" font-weight="700">압력계</text></g>
 <g transform="translate(430,24)"><rect x="6" y="2" width="36" height="44" rx="18" fill="none"/><line x1="6" y1="24" x2="42" y2="24" stroke-width="1.4"/>
 <text x="-6" y="66" stroke="none" font-weight="700">어큐뮬레이터</text></g>
-<text x="24" y="112" stroke="none" font-size="11.5" font-weight="700" fill="#2563eb">조작 방식</text>
-<text x="24" y="132" stroke="none" font-size="11">인력(버튼·레버·페달) · 기계(롤러·스프링·플런저) · <tspan font-weight="700">전자(솔레노이드)</tspan> · <tspan font-weight="700">파일럿</tspan></text>
+<text x="24" y="120" stroke="none" font-size="11.5" font-weight="700" fill="#2563eb">조작 방식</text>
+<text x="24" y="142" stroke="none" font-size="11">인력(버튼·레버·페달) · 기계(롤러·스프링·플런저) · <tspan font-weight="700">전자(솔레노이드)</tspan> · <tspan font-weight="700">파일럿</tspan></text>
 </g></svg>`,"마름모 안의 표시로 구분 — 냉각기는 대각선, 가열기는 십자")],
 
 "PLC·자동화|불대수와 드모르간 정리 ★★":[

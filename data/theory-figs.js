@@ -183,7 +183,7 @@ f(`<svg viewBox="0 0 520 165" xmlns="http://www.w3.org/2000/svg" style="${S}">
 <rect x="320" y="92" width="150" height="26" fill="#f1f5f9"/>
 <line x1="450" y1="105" x2="488" y2="105" stroke="#dc2626" stroke-width="2"/><path d="M488 105 l-9 -5 v10 z" fill="#dc2626" stroke="none"/>
 <text x="320" y="136" stroke="none">커터 회전 ↔ 이송 <tspan font-weight="700">같음</tspan></text>
-<text x="320" y="153" stroke="none" font-size="11">가공면 깨끗·공구수명↑ (백래시 제거 필요)</text>
+<text x="320" y="153" stroke="none" font-size="9.5">가공면 깨끗·공구수명↑ (백래시 제거 필요)</text>
 </g></svg>`,"빨간 화살표=공작물 이송 방향, 파란 화살표=커터 회전 방향")],
 
 "기계가공·측정|선반의 구조·부속장치와 테이퍼 ★★":[
@@ -244,17 +244,18 @@ f(`<svg viewBox="0 0 520 180" xmlns="http://www.w3.org/2000/svg" style="${S}">
 </g></svg>`,"빨간 사각형=유량조절밸브. 직렬이면 미터인/아웃, 병렬로 빼내면 블리드오프")],
 
 "전기·제어|방향제어밸브 ★★★":[
-f(`<svg viewBox="0 0 520 165" xmlns="http://www.w3.org/2000/svg" style="${S}">
+f(`<svg viewBox="0 0 520 182" xmlns="http://www.w3.org/2000/svg" style="${S}">
 <g font-size="11.5" fill="#0f172a" stroke="#334155" stroke-width="1.5">
 <text x="15" y="16" fill="#2563eb" stroke="none" font-weight="700" font-size="12.5">5/2-way 밸브 기호 읽기</text>
+<g transform="translate(0,18)">
 <rect x="60" y="34" width="70" height="52" fill="none"/><rect x="130" y="34" width="70" height="52" fill="none"/>
 <path d="M72 78 l16 -32 M88 46 l4 8 M88 46 l-8 2 M104 46 l16 32 M120 78 l-2 -9 M120 78 l9 -2" fill="none"/>
 <path d="M142 46 l16 32 M158 78 l-2 -9 M158 78 l9 -2 M174 78 l16 -32 M190 46 l4 8 M190 46 l-8 2" fill="none"/>
 <line x1="88" y1="86" x2="88" y2="104"/><line x1="130" y1="86" x2="130" y2="104"/><line x1="110" y1="86" x2="110" y2="104"/>
 <line x1="88" y1="34" x2="88" y2="18"/><line x1="130" y1="34" x2="130" y2="18"/>
 <text x="82" y="118" stroke="none">R</text><text x="104" y="118" stroke="none">P</text><text x="126" y="118" stroke="none">S</text>
-<text x="82" y="14" stroke="none">B</text><text x="126" y="14" stroke="none">A</text>
-<text x="15" y="140" stroke="none"><tspan font-weight="700">포트 수</tspan> = 배관 개수(5) · <tspan font-weight="700">위치 수</tspan> = 네모칸 개수(2)</text>
+<text x="82" y="14" stroke="none">B</text><text x="126" y="14" stroke="none">A</text></g>
+<text x="15" y="158" stroke="none"><tspan font-weight="700">포트 수</tspan> = 배관 개수(5) · <tspan font-weight="700">위치 수</tspan> = 네모칸 개수(2)</text>
 <text x="290" y="16" fill="#2563eb" stroke="none" font-weight="700" font-size="12.5">포트 기호</text>
 <text x="292" y="40" stroke="none"><tspan font-weight="700">P(1)</tspan> 공급 — 공기탱크와 연결</text>
 <text x="292" y="62" stroke="none"><tspan font-weight="700">A, B(2,4)</tspan> 작업 — 실린더와 연결</text>
@@ -264,7 +265,7 @@ f(`<svg viewBox="0 0 520 165" xmlns="http://www.w3.org/2000/svg" style="${S}">
 </g></svg>`,"네모칸 개수가 위치 수, 한 칸에 연결된 선의 개수가 포트 수")],
 
 "PLC·자동화|기본 논리회로 ★★★":[
-f(`<svg viewBox="0 0 520 175" xmlns="http://www.w3.org/2000/svg" style="${S}">
+f(`<svg viewBox="0 0 520 200" xmlns="http://www.w3.org/2000/svg" style="${S}">
 <g font-size="11.5" fill="#0f172a" stroke="#334155" stroke-width="1.6">
 <g><path d="M30 26 h22 a22 22 0 0 1 0 40 h-22 z" fill="none"/><line x1="16" y1="34" x2="30" y2="34"/><line x1="16" y1="58" x2="30" y2="58"/><line x1="74" y1="46" x2="88" y2="46"/><text x="26" y="86" stroke="none" font-weight="700">AND</text><text x="20" y="102" stroke="none" font-size="10.5">모두 1일 때 1</text></g>
 <g transform="translate(120,0)"><path d="M28 26 q22 20 0 40 q26 0 46 -20 q-20 -20 -46 -20 z" fill="none"/><line x1="14" y1="34" x2="30" y2="34"/><line x1="14" y1="58" x2="30" y2="58"/><line x1="74" y1="46" x2="88" y2="46"/><text x="30" y="86" stroke="none" font-weight="700">OR</text><text x="16" y="102" stroke="none" font-size="10.5">하나라도 1이면 1</text></g>
@@ -292,9 +293,9 @@ f(`<svg viewBox="0 0 520 175" xmlns="http://www.w3.org/2000/svg" style="${S}">
 <g transform="translate(20,112)" stroke-width="1.4">
 <line x1="0" y1="8" x2="300" y2="8"/><line x1="0" y1="56" x2="300" y2="56"/>
 <line x1="40" y1="8" x2="40" y2="20"/><line x1="40" y1="20" x2="62" y2="8"/><circle cx="40" cy="20" r="3" fill="#334155"/>
-<text x="30" y="34" stroke="none" font-size="10.5">PB(기동)</text>
+<text x="18" y="34" stroke="none" font-size="10.5">PB(기동)</text>
 <line x1="40" y1="20" x2="40" y2="44"/><line x1="40" y1="44" x2="150" y2="44"/>
-<line x1="90" y1="44" x2="90" y2="20" stroke-dasharray="3 3"/><text x="96" y="40" stroke="none" font-size="10.5">R-a (자기유지)</text>
+<line x1="90" y1="44" x2="90" y2="20" stroke-dasharray="3 3"/><text x="96" y="36" stroke="none" font-size="10.5">R-a</text>
 <line x1="150" y1="8" x2="150" y2="20"/><rect x="136" y="20" width="30" height="20" fill="none"/><text x="146" y="35" stroke="none" font-size="11">R</text>
 <line x1="150" y1="40" x2="150" y2="56"/>
 </g>

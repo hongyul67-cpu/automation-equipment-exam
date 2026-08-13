@@ -264,7 +264,7 @@ f(`<svg viewBox="0 0 520 145" xmlns="http://www.w3.org/2000/svg" style="${S}">
 </g></svg>`,"리드 = 줄 수 × 피치 — 계산문제의 출발점")],
 
 "기계요소·조립|키·핀·코터 ★★":[
-f(`<svg viewBox="0 0 520 150" xmlns="http://www.w3.org/2000/svg" style="${S}">
+f(`<svg viewBox="0 0 520 172" xmlns="http://www.w3.org/2000/svg" style="${S}">
 <g font-size="11" fill="#0f172a" stroke="#334155" stroke-width="1.4">
 <g transform="translate(24,24)"><circle cx="40" cy="40" r="34" fill="#f1f5f9"/><circle cx="40" cy="40" r="20" fill="#fff"/>
 <rect x="32" y="14" width="16" height="14" fill="#fca5a5" stroke="#dc2626"/>
@@ -279,11 +279,11 @@ f(`<svg viewBox="0 0 520 150" xmlns="http://www.w3.org/2000/svg" style="${S}">
 <g transform="translate(402,24)"><circle cx="40" cy="40" r="34" fill="#f1f5f9"/><circle cx="40" cy="40" r="20" fill="#fff"/>
 <g fill="#fca5a5" stroke="#dc2626"><rect x="35" y="15" width="10" height="10"/><rect x="35" y="55" width="10" height="10"/><rect x="15" y="35" width="10" height="10"/><rect x="55" y="35" width="10" height="10"/></g>
 <text x="14" y="98" stroke="none" font-weight="700">스플라인</text><text x="4" y="112" stroke="none" font-size="10">여러 개 홈 · 큰 동력</text></g>
-<text x="24" y="146" stroke="none" font-size="11.5">강도 순서 : 세레이션 &gt; 스플라인 &gt; 접선 &gt; 성크 &gt; 반달 &gt; 평 &gt; <tspan font-weight="700">안장</tspan></text>
+<text x="24" y="166" stroke="none" font-size="11.5">강도 순서 : 세레이션 &gt; 스플라인 &gt; 접선 &gt; 성크 &gt; 반달 &gt; 평 &gt; <tspan font-weight="700">안장</tspan></text>
 </g></svg>`,"홈이 많을수록 큰 동력 전달 — 안장 키가 가장 약하다")],
 
 "기계요소·조립|기어의 종류와 모듈 ★★":[
-f(`<svg viewBox="0 0 520 145" xmlns="http://www.w3.org/2000/svg" style="${S}">
+f(`<svg viewBox="0 0 520 168" xmlns="http://www.w3.org/2000/svg" style="${S}">
 <g font-size="11.5" fill="#0f172a" stroke="#334155" stroke-width="1.4">
 <text x="14" y="16" fill="#2563eb" stroke="none" font-weight="700" font-size="12.5">두 축의 관계에 따른 분류</text>
 <g transform="translate(20,28)"><line x1="0" y1="16" x2="70" y2="16" stroke-width="2"/><line x1="0" y1="52" x2="70" y2="52" stroke-width="2"/>
@@ -295,7 +295,7 @@ f(`<svg viewBox="0 0 520 145" xmlns="http://www.w3.org/2000/svg" style="${S}">
 <text x="400" y="46" stroke="none" font-weight="700" fill="#dc2626" font-size="13">m = D / Z</text>
 <text x="392" y="68" stroke="none" font-size="11">모듈 = 피치원지름</text><text x="404" y="84" stroke="none" font-size="11">÷ 잇수</text>
 <text x="392" y="106" stroke="none" font-size="11">예) 250/50 = <tspan font-weight="700">5</tspan></text>
-<text x="14" y="138" stroke="none" font-size="11">웜기어 = 큰 감속비·역전방지 / 내접기어 = 회전방향 같고 감속비 큼</text>
+<text x="14" y="160" stroke="none" font-size="11">웜기어 = 큰 감속비·역전방지 / 내접기어 = 회전방향 같고 감속비 큼</text>
 </g></svg>`,"축 관계로 3분류 — 웜·하이포이드는 두 축이 어긋난 경우")],
 
 "기계요소·조립|베어링·커플링·브레이크 ★★":[
@@ -320,7 +320,7 @@ f(`<svg viewBox="0 0 520 150" xmlns="http://www.w3.org/2000/svg" style="${S}">
 </g></svg>`,"하중 방향으로 레이디얼/스러스트 구분, 수명은 볼베어링 3제곱")],
 
 "작업안전|안전보호구와 안전표지 ★★":[
-f(`<svg viewBox="0 0 520 140" xmlns="http://www.w3.org/2000/svg" style="${S}">
+f(`<svg viewBox="0 0 520 162" xmlns="http://www.w3.org/2000/svg" style="${S}">
 <g font-size="12" fill="#0f172a" stroke="#334155" stroke-width="1.4">
 <g transform="translate(24,20)"><circle cx="42" cy="34" r="30" fill="#fff" stroke="#dc2626" stroke-width="7"/>
 <line x1="21" y1="13" x2="63" y2="55" stroke="#dc2626" stroke-width="7"/>
@@ -334,7 +334,7 @@ f(`<svg viewBox="0 0 520 140" xmlns="http://www.w3.org/2000/svg" style="${S}">
 <g transform="translate(402,20)"><rect x="12" y="6" width="60" height="56" fill="#16a34a" stroke="none"/>
 <path d="M28 34 l10 10 l20 -22" stroke="#fff" stroke-width="5" fill="none"/>
 <text x="8" y="90" stroke="none" font-weight="700">안내표지</text><text x="0" y="106" stroke="none" font-size="10.5">녹색 바탕 · 흰 그림</text></g>
-<text x="24" y="134" stroke="none" font-size="12">방진마스크는 <tspan font-weight="700">산소 18% 이상</tspan>인 장소에서만 · 산소결핍 시 <tspan font-weight="700">송기마스크</tspan></text>
+<text x="24" y="154" stroke="none" font-size="12">방진마스크는 <tspan font-weight="700">산소 18% 이상</tspan>인 장소에서만 · 산소결핍 시 <tspan font-weight="700">송기마스크</tspan></text>
 </g></svg>`,"금지=빨강 · 경고=노랑 · 지시=파랑 · 안내=녹색")],
 
 "작업안전|기계·수공구 작업의 안전 ★":[
@@ -385,7 +385,7 @@ f(`<svg viewBox="0 0 520 140" xmlns="http://www.w3.org/2000/svg" style="${S}">
 </g></svg>`,"서비스 유닛 설치 순서: 필터 → 압력조절기 → 윤활기")],
 
 "전기·제어|유압 실린더와 부속장치 ★★":[
-f(`<svg viewBox="0 0 520 160" xmlns="http://www.w3.org/2000/svg" style="${S}">
+f(`<svg viewBox="0 0 520 174" xmlns="http://www.w3.org/2000/svg" style="${S}">
 <g font-size="11" fill="#0f172a" stroke="#334155" stroke-width="1.5">
 <g transform="translate(14,22)"><rect x="0" y="0" width="90" height="34" fill="#f1f5f9"/><rect x="26" y="4" width="14" height="26" fill="#94a3b8"/>
 <line x1="40" y1="17" x2="110" y2="17" stroke-width="3"/><path d="M60 4 q8 13 0 26" fill="none" stroke="#16a34a"/>
@@ -405,7 +405,7 @@ f(`<svg viewBox="0 0 520 160" xmlns="http://www.w3.org/2000/svg" style="${S}">
 </g></svg>`,"양로드=속도/힘 동일, 텔레스코프=긴 행정, 탠덤=큰 출력")],
 
 "전기·제어|압력제어밸브 ★★":[
-f(`<svg viewBox="0 0 520 145" xmlns="http://www.w3.org/2000/svg" style="${S}">
+f(`<svg viewBox="0 0 520 168" xmlns="http://www.w3.org/2000/svg" style="${S}">
 <g font-size="11" fill="#0f172a" stroke="#334155" stroke-width="1.5">
 <g transform="translate(16,26)"><rect x="0" y="0" width="42" height="42" fill="none"/><path d="M21 42 v14 M21 0 v-14"/>
 <path d="M8 30 l26 -18" /><path d="M34 12 l-8 1 M34 12 l-1 8"/>
@@ -422,11 +422,11 @@ f(`<svg viewBox="0 0 520 145" xmlns="http://www.w3.org/2000/svg" style="${S}">
 <g transform="translate(406,26)"><rect x="0" y="0" width="42" height="42" fill="none"/><path d="M21 42 v14 M21 0 v-14"/>
 <path d="M8 30 l26 -18"/><circle cx="52" cy="21" r="9" fill="none"/><path d="M43 21 h-9"/>
 <text x="-16" y="76" stroke="none" font-weight="700">카운터밸런스</text><text x="-16" y="90" stroke="none" font-size="10">낙하 방지·배압</text><text x="-10" y="103" stroke="none" font-size="10">(체크밸브 내장)</text></g>
-<text x="16" y="138" stroke="none" font-size="11.5">무부하(언로딩) 밸브 : 일하지 않을 때 작동유를 탱크로 → 펌프 무부하 운전</text>
+<text x="16" y="160" stroke="none" font-size="11.5">무부하(언로딩) 밸브 : 일하지 않을 때 작동유를 탱크로 → 펌프 무부하 운전</text>
 </g></svg>`,"릴리프=최고압 제한, 감압=낮게 유지, 시퀀스=순서, 카운터밸런스=낙하방지")],
 
 "PLC·자동화|제어의 분류와 시퀀스 제어 ★★":[
-f(`<svg viewBox="0 0 520 165" xmlns="http://www.w3.org/2000/svg" style="${S}">
+f(`<svg viewBox="0 0 520 186" xmlns="http://www.w3.org/2000/svg" style="${S}">
 <g font-size="11" fill="#0f172a" stroke="#334155" stroke-width="1.4">
 <text x="14" y="16" fill="#2563eb" stroke="none" font-weight="700" font-size="12">개회로(시퀀스) 제어</text>
 <g transform="translate(14,26)">
@@ -449,7 +449,7 @@ f(`<svg viewBox="0 0 520 165" xmlns="http://www.w3.org/2000/svg" style="${S}">
 </g></svg>`,"피드백의 유무가 개회로와 폐회로를 가르는 기준")],
 
 "PLC·자동화|시퀀스 제어계의 표시법":[
-f(`<svg viewBox="0 0 520 150" xmlns="http://www.w3.org/2000/svg" style="${S}">
+f(`<svg viewBox="0 0 520 172" xmlns="http://www.w3.org/2000/svg" style="${S}">
 <g font-size="11" fill="#0f172a" stroke="#334155" stroke-width="1.4">
 <text x="14" y="16" fill="#2563eb" stroke="none" font-weight="700" font-size="12">타임차트</text>
 <g transform="translate(20,24)" stroke-width="1.6">
@@ -469,7 +469,7 @@ f(`<svg viewBox="0 0 520 150" xmlns="http://www.w3.org/2000/svg" style="${S}">
 <circle cx="150" cy="58" r="12" fill="none"/><line x1="162" y1="58" x2="200" y2="58"/>
 <text x="34" y="46" stroke="none" font-size="9.5">R-a</text><text x="146" y="62" stroke="none" font-size="9.5">L</text>
 <text x="0" y="98" stroke="none" font-size="10">사다리 모양 — PLC 프로그래밍의 기본</text></g>
-<text x="14" y="146" stroke="none" font-size="11">직류전원 = <tspan font-weight="700">P(+), N(−)</tspan> / 교류전원 = <tspan font-weight="700">R, S, T</tspan> · 회로도는 횡서(좌→우)</text>
+<text x="14" y="166" stroke="none" font-size="11">직류전원 = <tspan font-weight="700">P(+), N(−)</tspan> / 교류전원 = <tspan font-weight="700">R, S, T</tspan> · 회로도는 횡서(좌→우)</text>
 </g></svg>`,"타임차트는 시간축, 래더는 사다리 모양 회로도")],
 
 "PLC·자동화|PLC의 특징과 구성 ★★":[
@@ -493,7 +493,7 @@ f(`<svg viewBox="0 0 520 150" xmlns="http://www.w3.org/2000/svg" style="${S}">
 </g></svg>`,"입력부 → CPU → 출력부 구조, 배선 대신 프로그램으로 제어")],
 
 "PLC·자동화|센서와 산업용 로봇 ★★":[
-f(`<svg viewBox="0 0 520 155" xmlns="http://www.w3.org/2000/svg" style="${S}">
+f(`<svg viewBox="0 0 520 178" xmlns="http://www.w3.org/2000/svg" style="${S}">
 <g font-size="11" fill="#0f172a" stroke="#334155" stroke-width="1.5">
 <text x="14" y="16" fill="#2563eb" stroke="none" font-weight="700" font-size="12">산업용 로봇 (구조별)</text>
 <g transform="translate(20,26)"><line x1="0" y1="60" x2="56" y2="60" stroke-width="2"/><line x1="10" y1="60" x2="10" y2="14" stroke-width="2"/><line x1="10" y1="20" x2="50" y2="20" stroke-width="2"/>
@@ -509,8 +509,8 @@ f(`<svg viewBox="0 0 520 155" xmlns="http://www.w3.org/2000/svg" style="${S}">
 <text x="418" y="60" stroke="none" font-size="10.5">PTP(점대점)</text>
 <text x="418" y="76" stroke="none" font-size="10.5">CP(연속경로)</text>
 <text x="418" y="92" stroke="none" font-size="10.5">티칭 플레이백</text>
-<text x="14" y="130" stroke="none" font-size="11.5"><tspan font-weight="700">유도형</tspan>=금속만 / <tspan font-weight="700">정전용량형</tspan>=플라스틱·유리 등 비금속도 검출</text>
-<text x="14" y="148" stroke="none" font-size="11.5">열전대=온도차로 기전력 · 서미스터=저항 변화 · 스트레인게이지=변형→압력</text>
+<text x="14" y="150" stroke="none" font-size="11.5"><tspan font-weight="700">유도형</tspan>=금속만 / <tspan font-weight="700">정전용량형</tspan>=플라스틱·유리 등 비금속도 검출</text>
+<text x="14" y="168" stroke="none" font-size="11.5">열전대=온도차로 기전력 · 서미스터=저항 변화 · 스트레인게이지=변형→압력</text>
 </g></svg>`,"‘다관절’은 구조에 의한 분류 (교시에 따른 분류가 아님)")]
 
 };

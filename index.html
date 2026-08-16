@@ -67,6 +67,8 @@
   .omr{display:grid;grid-template-columns:repeat(10,1fr);gap:6px;margin-top:6px}
   .omr button{aspect-ratio:1;border:1px solid var(--line);background:#fff;border-radius:8px;font-size:12px;cursor:pointer;font-family:inherit;color:#475569}
   .omr button.done{background:#dbeafe;border-color:#93c5fd;color:var(--brand);font-weight:700}
+  .omr button.okmark{background:var(--ok-bg);border-color:#86efac;color:#166534}
+  .omr button.nomark{background:var(--no-bg);border-color:#fca5a5;color:#991b1b}
   .omr button.cur{outline:2px solid var(--brand);outline-offset:1px}
   .timer{font-weight:800;font-size:15px;color:#0f172a;background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:6px 12px}
   .timer.warn{color:#b91c1c;background:#fee2e2;border-color:#fecaca}
@@ -353,6 +355,7 @@ function home(){
         <p>틀린 문제만 모아 다시 풀기. <b>${wrong}</b>문제 저장됨.</p>
       </div>
     </div>
+    ${hasRank()?`<div id="rankcard">${Rank.card()}</div>`:""}
     <div class="stat">
       <div class="chip">보유 기출 <b>${EXAMS.length}</b>회차 · <b>${totalQ}</b>문항</div>
       <div class="chip">누적 정답률 <b>${acc}%</b> (${st.correct}/${st.solved})</div>
@@ -431,6 +434,7 @@ function submitCBT(){
   const st=LS.getStat();st.solved+=e.questions.length;st.correct+=correct;st.exams+=1;LS.setStat(st);
   const total=e.questions.length,score=Math.round(correct/total*100);
   SYNC.result(e.title,score,correct,total);SYNC.save();
+  CBT._rp=awardRP(score,"CBT 모의고사");
   resultCBT(correct,wrongList);
 }
 function resultCBT(correct,wrongList){
@@ -443,6 +447,7 @@ function resultCBT(correct,wrongList){
     <div class="scorebig" style="color:${color};margin-top:10px">${score}점</div>
     <div class="passbar"><div style="width:${score}%;background:${color}"></div></div>
     <div class="result-note">${correct} / ${total} 정답 · <b style="color:${color}">${pass?"합격 🎉":"불합격 (60점 미만)"}</b></div>
+    ${rpBox(CBT._rp)}
     ${(window.ResultCollector&&ResultCollector.config&&ResultCollector.config.endpoint)?`<button class="btn" style="width:100%;margin-top:14px;background:#16a34a;color:#fff" onclick="submitResult()">📤 선생님께 결과 제출</button>`:""}
     <div class="navbtns" style="margin-top:12px">
       <button class="btn ghost" onclick="startCBT(EXAMS.indexOf(CBT.exam))">다시 풀기</button>
@@ -452,13 +457,27 @@ function resultCBT(correct,wrongList){
   CBT._score=score;CBT._correct=correct;CBT._total=total;CBT._dur=60*60-CBT.left;CBT._wrong=wrongList;
 }
 const BASE_TOOL="자동화설비 필기";
+/* ---- 계급·랭크포인트 (rank.js 위젯) ---- */
+function hasRank(){return typeof Rank!=="undefined"&&Rank&&typeof Rank.award==="function";}
+function awardRP(scorePct,mode){
+  if(!hasRank())return null;
+  try{return Rank.award(scorePct,{mode:mode});}catch(e){return null;}
+}
+function rankDetail(){
+  if(!hasRank())return "";
+  try{const g=Rank.get();return ((g.tier&&g.tier.full)||"")+" · "+(g.rp||0)+"RP";}catch(e){return "";}
+}
+function rpBox(res){
+  if(!res||!hasRank())return "";
+  try{return Rank.resultBox(res);}catch(e){return "";}
+}
 function rcReady(){return !!(window.ResultCollector&&ResultCollector.config&&ResultCollector.config.endpoint);}
 function submitResult(){
   if(!rcReady()){alert("결과 제출 링크로 접속했을 때만 제출할 수 있어요. (선생님이 배포한 링크를 사용하세요)");return;}
   ResultCollector.config.tool=BASE_TOOL+" · "+CBT.exam.title;
   ResultCollector.open({
     score:CBT._score, correct:CBT._correct, total:CBT._total,
-    wrong:(CBT._wrong||[]).map(q=>q.no), durationSec:CBT._dur
+    wrong:(CBT._wrong||[]).map(q=>q.no), durationSec:CBT._dur, detail:rankDetail()
   });
 }
 function reviewCBT(){
@@ -508,7 +527,7 @@ function studyPick(){
       <input type="checkbox" id="shuf" checked> 문제 순서 섞기</label>
     <div style="display:flex;gap:10px;margin-top:16px">
       <button class="btn ghost" style="flex:1" onclick="startStudy()">📖 학습<br><small style="font-weight:400;color:var(--muted)">바로 해설</small></button>
-      <button class="btn primary" style="flex:1" onclick="startQuiz()">📝 시험<br><small style="font-weight:400;opacity:.85">채점 · 제출</small></button>
+      <button class="btn primary" style="flex:1" onclick="startQuiz()">📝 시험<br><small style="font-weight:400;opacity:.85">바로 채점 · 제출</small></button>
     </div>
   </div>`;
 }
@@ -565,6 +584,7 @@ function startQuiz(){
 }
 function renderQuiz(){
   const q=QUIZ.qs[QUIZ.i],N=QUIZ.qs.length,answered=Object.keys(QUIZ.ans).length;
+  const picked=QUIZ.ans[QUIZ.i], done=picked!=null, ok=picked===q.answer;
   app.innerHTML=`
   <div class="row" style="justify-content:space-between;color:#fff;margin-bottom:8px">
     <button class="back" onclick="quitQuiz()">← 나가기</button>
@@ -575,6 +595,7 @@ function renderQuiz(){
     <div class="qtext">${esc(q.q)}</div>
     ${q.img?`<img class="qimg" src="${q.img}">`:""}
     <div class="choices" id="choices"></div>
+    <div class="expl ${done?"show":""}">${done?`<b class="ansline">${ok?"⭕ 정답입니다!":"❌ 틀렸어요"} · 정답 ${NUM[q.answer]}번${q.choicesImg?" (위 그림 참고)":""}</b>`:""}<b>해설</b> · ${esc(q.explain)}</div>
     <div class="navbtns">
       <button class="btn ghost" onclick="quizGo(-1)" ${QUIZ.i===0?"disabled":""}>◀ 이전</button>
       ${QUIZ.i===N-1
@@ -588,13 +609,23 @@ function renderQuiz(){
     <div class="omr" id="omr"></div>
   </div>`;
   const ch=$("#choices");
-  q.choices.forEach((c,k)=>{const n=k+1;const sel=QUIZ.ans[QUIZ.i]===n;
-    const d=document.createElement("div");d.className="choice"+(sel?" sel":"");
+  q.choices.forEach((c,k)=>{const n=k+1;
+    const d=document.createElement("div");
+    let cls="choice";
+    if(done){cls+=" disabled";if(n===q.answer)cls+=" correct";else if(n===picked)cls+=" wrong";}
+    d.className=cls;
     d.innerHTML=`<span class="num">${NUM[n]}</span><span>${q.choicesImg?"":esc(c)}</span>`;
-    d.onclick=()=>{QUIZ.ans[QUIZ.i]=n;renderQuiz();};ch.appendChild(d);});
+    if(!done)d.onclick=()=>{           // 한 번 고르면 즉시 채점되고 바꿀 수 없음
+      QUIZ.ans[QUIZ.i]=n;
+      const st=LS.getStat();st.solved++;if(n===q.answer)st.correct++;LS.setStat(st);
+      if(n!==q.answer)LS.addWrong(q._k,q.no);
+      SYNC.saveSoon();renderQuiz();};
+    ch.appendChild(d);});
   const omr=$("#omr");
   QUIZ.qs.forEach((qq,k)=>{const b=document.createElement("button");b.textContent=k+1;
-    if(QUIZ.ans[k])b.classList.add("done");if(k===QUIZ.i)b.classList.add("cur");
+    if(QUIZ.ans[k]!=null){b.classList.add("done");
+      b.classList.add(QUIZ.ans[k]===qq.answer?"okmark":"nomark");}
+    if(k===QUIZ.i)b.classList.add("cur");
     b.onclick=()=>{QUIZ.i=k;renderQuiz();};omr.appendChild(b);});
 }
 function quizGo(d){QUIZ.i=Math.min(QUIZ.qs.length-1,Math.max(0,QUIZ.i+d));renderQuiz();}
@@ -605,9 +636,10 @@ function submitQuiz(){
   let correct=0;const wrongIdx=[];
   QUIZ.qs.forEach((q,k)=>{const a=QUIZ.ans[k];const ok=a===q.answer;
     if(ok)correct++;else{wrongIdx.push(k);LS.addWrong(q._k,q.no);}});
-  const st=LS.getStat();st.solved+=N;st.correct+=correct;LS.setStat(st);SYNC.saveSoon();
+  SYNC.saveSoon();   // 통계(정답률)는 문제를 풀 때마다 이미 반영됨
   QUIZ._correct=correct;QUIZ._total=N;QUIZ._score=Math.round(correct/N*100);
   QUIZ._dur=Math.round((Date.now()-QUIZ.start)/1000);QUIZ._wrong=wrongIdx;
+  QUIZ._rp=awardRP(QUIZ._score,QUIZ.label+" 시험");
   resultQuiz();
 }
 function resultQuiz(){
@@ -620,6 +652,7 @@ function resultQuiz(){
     <div class="scorebig" style="color:${color};margin-top:10px">${score}점</div>
     <div class="passbar"><div style="width:${score}%;background:${color}"></div></div>
     <div class="result-note">${correct} / ${N} 정답 · <b style="color:${color}">${pass?"합격 🎉":"불합격 (60점 미만)"}</b></div>
+    ${rpBox(QUIZ._rp)}
     ${rcReady()?`<button class="btn" style="width:100%;margin-top:14px;background:#16a34a;color:#fff" onclick="submitSubjectResult()">📤 선생님께 결과 제출</button>`:""}
     <div class="navbtns" style="margin-top:12px">
       <button class="btn ghost" onclick="studyPick()">범위 다시 선택</button>
@@ -632,7 +665,7 @@ function submitSubjectResult(){
   ResultCollector.config.tool=BASE_TOOL+" · "+QUIZ.label;
   ResultCollector.open({
     score:QUIZ._score, correct:QUIZ._correct, total:QUIZ._total,
-    wrong:QUIZ._wrong.map(k=>QUIZ.qs[k]._k+"-"+QUIZ.qs[k].no), durationSec:QUIZ._dur
+    wrong:QUIZ._wrong.map(k=>QUIZ.qs[k]._k+"-"+QUIZ.qs[k].no), durationSec:QUIZ._dur, detail:rankDetail()
   });
 }
 function reviewQuiz(){
@@ -1029,5 +1062,7 @@ else home();
 </script>
 <!-- 결과 수집 위젯: 선생님이 링크 생성기로 만든 ?rc= 링크로 접속하면 CBT 결과에 '제출' 버튼이 나타납니다 -->
 <script src="https://hongyul67-cpu.github.io/links/collector.js" data-tool="자동화설비 필기"></script>
+<!-- 계급·랭크포인트 위젯 (🪨아이언 ~ 👑마스터 7티어) -->
+<script src="https://hongyul67-cpu.github.io/links/rank.js" data-tool="자동화설비필기"></script>
 </body>
 </html>

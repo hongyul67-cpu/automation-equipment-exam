@@ -43,6 +43,7 @@ function doPost(e) {
 function doGet(e) {
   var p = (e && e.parameter) || {};
   if (p.action === 'load') return out(cbtLoadState(p.cls, p.name), p.callback); // CBT 이어하기
+  if (p.action === 'rank') return out(cbtRank(p.cls), p.callback);              // 반별 랭킹
   if (p.action === 'get')  return out(tdpGet(p.cls, p.name), p.callback);       // 3D 이어하기
   if (p.action === 'save') { tdpSave(p); return out({ ok: true }, p.callback); } // 3D GET 저장
   return out({ ok: true, msg: 'unified collector alive' }, p.callback);
@@ -92,8 +93,13 @@ function rcAppend(d) {
 
 /* ===================== ② 필기 CBT ===================== */
 function cbtStudents() {
-  return sheetOf('학생현황',
-    ['학생키', '반', '이름', '정답률(%)', '푼문항', '맞힘', '오답수', 'CBT응시', '마지막접속', '상태(JSON)']);
+  var sh = sheetOf('학생현황',
+    ['학생키', '반', '이름', '정답률(%)', '푼문항', '맞힘', '오답수', 'CBT응시', '마지막접속', '상태(JSON)', 'RP', '계급']);
+  // 기존 시트(10칸)에 RP·계급 열이 없으면 추가
+  if (sh.getLastColumn() < 12) {
+    sh.getRange(1, 11, 1, 2).setValues([['RP', '계급']]).setFontWeight('bold');
+  }
+  return sh;
 }
 function cbtSaveState(d) {
   var sh = cbtStudents(), k = keyOf(d.cls, d.name);
@@ -101,16 +107,45 @@ function cbtSaveState(d) {
   var wrong = d.wrong || [];
   var acc = stat.solved ? Math.round(stat.correct / stat.solved * 100) : 0;
   var stateJson = JSON.stringify({ wrong: wrong, stat: stat });
+  var rp = numOf(d.rp); if (rp === '') rp = 0;
+  var tier = String(d.tier || '');
   var r = findRow(sh, k);
   if (r < 0) {
     sh.appendRow([k, d.cls || '', d.name || '', acc, stat.solved || 0, stat.correct || 0,
-      wrong.length, 0, new Date(), stateJson]);
+      wrong.length, 0, new Date(), stateJson, rp, tier]);
   } else {
     var cbt = sh.getRange(r, 8).getValue() || 0;
-    sh.getRange(r, 1, 1, 10).setValues([[k, d.cls || '', d.name || '', acc,
-      stat.solved || 0, stat.correct || 0, wrong.length, cbt, new Date(), stateJson]]);
+    // RP는 뒤로 가지 않도록 최댓값 유지
+    var oldRp = Number(sh.getRange(r, 11).getValue()) || 0;
+    if (rp < oldRp) { rp = oldRp; tier = String(sh.getRange(r, 12).getValue() || tier); }
+    sh.getRange(r, 1, 1, 12).setValues([[k, d.cls || '', d.name || '', acc,
+      stat.solved || 0, stat.correct || 0, wrong.length, cbt, new Date(), stateJson, rp, tier]]);
   }
   return out({ ok: true });
+}
+
+/* 같은 반 랭킹 (RP 내림차순) */
+function cbtRank(cls) {
+  var sh = cbtStudents();
+  var last = sh.getLastRow();
+  if (last < 2) return { ok: true, cls: cls, rows: [] };
+  var v = sh.getRange(2, 1, last - 1, 12).getValues();
+  var rows = [];
+  for (var i = 0; i < v.length; i++) {
+    if (!v[i][2]) continue;                                   // 이름 없으면 제외
+    if (cls && String(v[i][1]).trim() !== String(cls).trim()) continue;
+    rows.push({
+      name: String(v[i][2]),
+      acc: Number(v[i][3]) || 0,
+      solved: Number(v[i][4]) || 0,
+      rp: Number(v[i][10]) || 0,
+      tier: String(v[i][11] || '')
+    });
+  }
+  rows.sort(function (a, b) {
+    return (b.rp - a.rp) || (b.acc - a.acc) || (b.solved - a.solved);
+  });
+  return { ok: true, cls: cls, rows: rows.slice(0, 60) };
 }
 function cbtSaveResult(d) {
   var log = sheetOf('응시기록', ['시각', '반', '이름', '회차', '점수', '맞힘', '총문항']);

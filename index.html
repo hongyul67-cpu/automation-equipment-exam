@@ -106,6 +106,18 @@
   .tfig{margin:16px 0 6px;text-align:center}
   .tfig svg{width:100%;max-width:560px;height:auto;background:#fff;border:1px solid var(--line);border-radius:12px;padding:8px}
   .tfig figcaption{font-size:12.5px;color:var(--muted);margin-top:7px;line-height:1.5}
+  /* 우리 반 랭킹 */
+  .rklist{display:flex;flex-direction:column;gap:8px}
+  .rkrow{display:flex;align-items:center;gap:12px;border:1px solid var(--line);border-radius:12px;padding:11px 14px;background:#fff}
+  .rkrow.me{border-color:var(--brand);background:#eff6ff;box-shadow:0 0 0 2px rgba(37,99,235,.12)}
+  .rkno{min-width:44px;text-align:center;font-weight:800;font-size:14px;color:var(--muted)}
+  .rkno.top{font-size:22px}
+  .rkme{background:var(--brand);color:#fff;border-radius:999px;padding:1px 8px;font-size:11px;font-weight:800;vertical-align:middle}
+  .rksub{font-size:12px;color:var(--muted);margin-top:3px}
+  .rkrp{font-weight:900;font-size:17px;color:var(--brand);white-space:nowrap}
+  .rkrp small{font-size:11px;margin-left:2px;font-weight:700}
+  body.board .rkrow{padding:16px 18px;font-size:clamp(16px,1.6vw,24px)}
+  body.board .rkrp{font-size:clamp(18px,1.9vw,28px)}
   /* slide(수업) mode */
   .slidecard{display:flex;flex-direction:column}
   .sl-top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px}
@@ -263,7 +275,10 @@ const SYNC={
   _post(obj){if(!this.ready())return;
     try{fetch(SYNC_URL,{method:"POST",mode:"no-cors",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(obj)});}catch(e){}},
   save(){if(!this.ready())return;const me=this.me();
-    this._post({action:"save",cls:me.cls,name:me.name,wrong:LS.getWrong(),stat:LS.getStat()});flashSync();},
+    const r=(typeof Rank!=="undefined"&&Rank)?(function(){try{const g=Rank.get();return {rp:g.rp||0,tier:(g.tier&&g.tier.full)||""};}catch(e){return {rp:0,tier:""};}})():{rp:0,tier:""};
+    this._post({action:"save",cls:me.cls,name:me.name,wrong:LS.getWrong(),stat:LS.getStat(),rp:r.rp,tier:r.tier});flashSync();},
+  rank(cls){if(!this.on())return Promise.resolve(null);
+    return jsonp(SYNC_URL+"?action=rank&cls="+encodeURIComponent(cls||"")).catch(()=>null);},
   saveSoon(){if(!this.ready())return;clearTimeout(this._t);this._t=setTimeout(()=>this.save(),1200);},
   result(exam,score,correct,total){if(!this.ready())return;const me=this.me();
     this._post({action:"result",cls:me.cls,name:me.name,exam:exam,score:score,correct:correct,total:total});},
@@ -356,6 +371,7 @@ function home(){
       </div>
     </div>
     ${hasRank()?`<div id="rankcard">${Rank.card()}</div>`:""}
+    ${SYNC.on()?`<button class="btn" style="width:100%;margin-top:10px;background:linear-gradient(135deg,#f59e0b,#f97316);color:#fff" onclick="rankBoard()">🏆 우리 반 랭킹 보기</button>`:""}
     <div class="stat">
       <div class="chip">보유 기출 <b>${EXAMS.length}</b>회차 · <b>${totalQ}</b>문항</div>
       <div class="chip">누적 정답률 <b>${acc}%</b> (${st.correct}/${st.solved})</div>
@@ -686,6 +702,53 @@ function reviewQuiz(){
       <div class="expl show"><b>해설</b> · ${esc(q.explain)}</div>
     </div>`;});
   html+=`</div>`;app.innerHTML=html;
+}
+
+/* ---------------- 우리 반 랭킹 ---------------- */
+function rankBoard(){
+  const me=SYNC.me()||{};
+  if(!SYNC.on()){
+    app.innerHTML=`<button class="back" onclick="home()">← 홈</button>
+    <div class="card"><span class="pill">🏆 우리 반 랭킹</span>
+    <div class="empty">선생님이 만든 <b>공유 링크</b>로 접속했을 때만<br>같은 반 친구들과 순위를 비교할 수 있어요.</div></div>`;return;}
+  if(!me.name){app.innerHTML=`<button class="back" onclick="home()">← 홈</button>
+    <div class="card"><div class="empty">먼저 반·이름을 입력해 주세요.</div></div>`;return;}
+  app.innerHTML=`<button class="back" onclick="home()">← 홈</button>
+  <div class="card"><span class="pill">🏆 우리 반 랭킹</span>
+  <div class="empty">순위를 불러오는 중… ⏳</div></div>`;
+  SYNC.rank(me.cls).then(r=>renderRankBoard(r,me)).catch(()=>renderRankBoard(null,me));
+}
+function renderRankBoard(r,me){
+  const rows=(r&&r.rows)||[];
+  const myIdx=rows.findIndex(x=>String(x.name).trim()===String(me.name).trim());
+  const medal=i=>i===0?"🥇":i===1?"🥈":i===2?"🥉":(i+1)+"위";
+  app.innerHTML=`
+  <button class="back" onclick="home()">← 홈</button>
+  <div class="card">
+    <div class="row" style="justify-content:space-between;align-items:center">
+      <span class="pill">🏆 ${esc(me.cls||"")}반 랭킹</span>
+      <button class="back" style="margin:0" onclick="rankBoard()">↻ 새로고침</button>
+    </div>
+    ${!rows.length?`<div class="empty">아직 순위가 없습니다.<br>문제를 풀고 나면 자동으로 등록돼요! 💪</div>`:`
+    <p style="color:var(--muted);font-size:13px;margin:10px 0 12px">
+      랭크포인트(RP) 순 · 총 <b>${rows.length}</b>명${myIdx>=0?` · 내 순위 <b style="color:var(--brand)">${myIdx+1}위</b>`:""}</p>
+    <div class="rklist">
+      ${rows.map((x,i)=>{
+        const mine=i===myIdx;
+        return `<div class="rkrow${mine?" me":""}">
+          <div class="rkno${i<3?" top":""}">${medal(i)}</div>
+          <div style="flex:1;min-width:0">
+            <b>${esc(x.name||"")}</b>${mine?` <span class="rkme">나</span>`:""}
+            <div class="rksub">${esc(x.tier||"—")} · 정답률 ${x.acc||0}% · ${x.solved||0}문항</div>
+          </div>
+          <div class="rkrp">${x.rp||0}<small>RP</small></div>
+        </div>`;}).join("")}
+    </div>`}
+    <div style="font-size:12px;color:var(--muted);margin-top:14px;line-height:1.6">
+      · 문제를 풀면 랭크포인트가 오르고 순위가 자동으로 갱신됩니다.<br>
+      · 같은 <b>반</b>으로 접속한 친구들끼리만 비교돼요.
+    </div>
+  </div>`;
 }
 
 /* ---------------- 이론 학습 ---------------- */

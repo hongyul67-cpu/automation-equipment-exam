@@ -507,7 +507,7 @@ function sendResult(tool, mode, payload){
   }, payload));
 }
 function submitResult(){
-  sendResult(BASE_TOOL+" · "+CBT.exam.title, "필기 CBT 모의고사", {
+  sendResult(BASE_TOOL+" · "+CBT.exam.title, "자동화설비 필기", {
     score:CBT._score, correct:CBT._correct, total:CBT._total,
     wrong:(CBT._wrong||[]).map(q=>q.no), durationSec:CBT._dur, detail:rankDetail()
   });
@@ -693,7 +693,7 @@ function resultQuiz(){
   </div>`;
 }
 function submitSubjectResult(){
-  sendResult(BASE_TOOL+" · "+QUIZ.label, "과목별 학습 · "+QUIZ.label, {
+  sendResult(BASE_TOOL+" · "+QUIZ.label, "자동화설비 필기 — "+QUIZ.label, {
     score:QUIZ._score, correct:QUIZ._correct, total:QUIZ._total,
     wrong:QUIZ._wrong.map(k=>QUIZ.qs[k]._k+"-"+QUIZ.qs[k].no), durationSec:QUIZ._dur, detail:rankDetail()
   });

@@ -488,10 +488,26 @@ function rpBox(res){
   try{return Rank.resultBox(res);}catch(e){return "";}
 }
 function rcReady(){return !!(window.ResultCollector&&ResultCollector.config&&ResultCollector.config.endpoint);}
-function submitResult(){
+/* ── 생기부 키워드용: 활동별 도전 횟수 (제출할 때마다 1씩 증가, 기기에 저장) ── */
+function bumpTry(mode){
+  const K="try_자동화설비필기";
+  let d={}; try{d=JSON.parse(localStorage.getItem(K))||{};}catch(e){}
+  d[mode]=(d[mode]||0)+1;
+  try{localStorage.setItem(K,JSON.stringify(d));}catch(e){}
+  return d[mode];
+}
+/* 제출 — 생기부용 키워드 자료(활동명·도전횟수·계급)를 함께 보낸다 */
+function sendResult(tool, mode, payload){
   if(!rcReady()){alert("결과 제출 링크로 접속했을 때만 제출할 수 있어요. (선생님이 배포한 링크를 사용하세요)");return;}
-  ResultCollector.config.tool=BASE_TOOL+" · "+CBT.exam.title;
-  ResultCollector.open({
+  ResultCollector.config.tool=tool;
+  ResultCollector.open(Object.assign({
+    mode: mode,
+    retry: bumpTry(mode),
+    tier: hasRank()?(function(){try{return Rank.get().tier.full;}catch(e){return undefined;}})():undefined
+  }, payload));
+}
+function submitResult(){
+  sendResult(BASE_TOOL+" · "+CBT.exam.title, "필기 CBT 모의고사", {
     score:CBT._score, correct:CBT._correct, total:CBT._total,
     wrong:(CBT._wrong||[]).map(q=>q.no), durationSec:CBT._dur, detail:rankDetail()
   });
@@ -677,9 +693,7 @@ function resultQuiz(){
   </div>`;
 }
 function submitSubjectResult(){
-  if(!rcReady()){alert("결과 제출 링크로 접속했을 때만 제출할 수 있어요. (선생님이 배포한 링크를 사용하세요)");return;}
-  ResultCollector.config.tool=BASE_TOOL+" · "+QUIZ.label;
-  ResultCollector.open({
+  sendResult(BASE_TOOL+" · "+QUIZ.label, "과목별 학습 · "+QUIZ.label, {
     score:QUIZ._score, correct:QUIZ._correct, total:QUIZ._total,
     wrong:QUIZ._wrong.map(k=>QUIZ.qs[k]._k+"-"+QUIZ.qs[k].no), durationSec:QUIZ._dur, detail:rankDetail()
   });

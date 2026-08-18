@@ -464,7 +464,7 @@ function resultCBT(correct,wrongList){
     <div class="passbar"><div style="width:${score}%;background:${color}"></div></div>
     <div class="result-note">${correct} / ${total} 정답 · <b style="color:${color}">${pass?"합격 🎉":"불합격 (60점 미만)"}</b></div>
     ${rpBox(CBT._rp)}
-    ${(window.ResultCollector&&ResultCollector.config&&ResultCollector.config.endpoint)?`<button class="btn" style="width:100%;margin-top:14px;background:#16a34a;color:#fff" onclick="submitResult()">📤 선생님께 결과 제출</button>`:""}
+    ${true?`<button class="btn" style="width:100%;margin-top:14px;background:#16a34a;color:#fff" onclick="submitResult()">📤 선생님께 결과 제출</button>`:""}
     <div class="navbtns" style="margin-top:12px">
       <button class="btn ghost" onclick="startCBT(EXAMS.indexOf(CBT.exam))">다시 풀기</button>
       <button class="btn primary" onclick="reviewCBT()">틀린 문제 해설 (${wrongList.length})</button>
@@ -488,6 +488,21 @@ function rpBox(res){
   try{return Rank.resultBox(res);}catch(e){return "";}
 }
 function rcReady(){return !!(window.ResultCollector&&ResultCollector.config&&ResultCollector.config.endpoint);}
+/* ── 틀린 문제를 "무엇을 틀렸는지"로 남긴다 (규약 §1 ②) ──
+   예) "7번 공압 실린더→유압 실린더" */
+function rcShort(t,len){
+  t=String(t==null?"":t).replace(/<[^>]*>/g," ").replace(/\s+/g," ").trim();
+  return t.length>len ? t.slice(0,len-1)+"\u2026" : t;
+}
+function rcWrongOf(q, my){
+  const ch=q.choices||[];
+  const mine = (my>=1 && ch[my-1]!=null) ? rcShort(ch[my-1],16) : "\ubb34\uc751\ub2f5";
+  const ans  = (q.answer>=1 && ch[q.answer-1]!=null) ? rcShort(ch[q.answer-1],16) : "?";
+  const head = (q.no!=null?q.no:"?")+"\ubc88";
+  const subj = q.subject ? " "+rcShort(q.subject,10)+" \u00b7 " : " ";
+  return q.choicesImg ? (head+subj+"\uadf8\ub9bc \ubcf4\uae30 "+my+"\u2192"+q.answer)
+                      : (head+subj+mine+"\u2192"+ans);
+}
 /* ── 생기부 키워드용: 활동별 도전 횟수 (제출할 때마다 1씩 증가, 기기에 저장) ── */
 function bumpTry(mode){
   const K="try_자동화설비필기";
@@ -496,10 +511,17 @@ function bumpTry(mode){
   try{localStorage.setItem(K,JSON.stringify(d));}catch(e){}
   return d[mode];
 }
-/* 제출 — 생기부용 키워드 자료(활동명·도전횟수·계급)를 함께 보낸다 */
+/* 제출 — 생기부용 키워드 자료(활동명·도전횟수·계급)를 함께 보낸다.
+   시트 탭(tool)은 하나로 두고, 어느 파트인지는 mode 로 보낸다 (규약 §1 ①). */
 function sendResult(tool, mode, payload){
-  if(!rcReady()){alert("결과 제출 링크로 접속했을 때만 제출할 수 있어요. (선생님이 배포한 링크를 사용하세요)");return;}
-  ResultCollector.config.tool=tool;
+  if(!rcReady()){
+    alert(["이 링크로는 제출이 되지 않아요.","",
+      "선생님이 나눠 준 제출용 링크(주소 뒤에 ?rc=... 가 붙은 링크)로",
+      "들어와야 반·번호를 입력하고 결과를 보낼 수 있습니다.","",
+      "연습은 지금 이대로 계속 하셔도 됩니다."].join(String.fromCharCode(10)));
+    return;
+  }
+  ResultCollector.config.tool=BASE_TOOL;
   ResultCollector.open(Object.assign({
     mode: mode,
     retry: bumpTry(mode),
@@ -507,9 +529,11 @@ function sendResult(tool, mode, payload){
   }, payload));
 }
 function submitResult(){
-  sendResult(BASE_TOOL+" · "+CBT.exam.title, "자동화설비 필기", {
+  sendResult(BASE_TOOL, "자동화설비 필기 — "+CBT.exam.title, {
     score:CBT._score, correct:CBT._correct, total:CBT._total,
-    wrong:(CBT._wrong||[]).map(q=>q.no), durationSec:CBT._dur, detail:rankDetail()
+    wrong:(CBT._wrong||[]).map(q=>rcWrongOf(q, CBT.ans[q.no])),
+    durationSec:CBT._dur, detail:rankDetail(),
+    extra:["기출 회차 전 범위 응시"]
   });
 }
 function reviewCBT(){
@@ -685,7 +709,7 @@ function resultQuiz(){
     <div class="passbar"><div style="width:${score}%;background:${color}"></div></div>
     <div class="result-note">${correct} / ${N} 정답 · <b style="color:${color}">${pass?"합격 🎉":"불합격 (60점 미만)"}</b></div>
     ${rpBox(QUIZ._rp)}
-    ${rcReady()?`<button class="btn" style="width:100%;margin-top:14px;background:#16a34a;color:#fff" onclick="submitSubjectResult()">📤 선생님께 결과 제출</button>`:""}
+    ${true?`<button class="btn" style="width:100%;margin-top:14px;background:#16a34a;color:#fff" onclick="submitSubjectResult()">📤 선생님께 결과 제출</button>`:""}
     <div class="navbtns" style="margin-top:12px">
       <button class="btn ghost" onclick="studyPick()">범위 다시 선택</button>
       <button class="btn primary" onclick="reviewQuiz()">틀린 문제 해설 (${QUIZ._wrong.length})</button>
@@ -693,9 +717,11 @@ function resultQuiz(){
   </div>`;
 }
 function submitSubjectResult(){
-  sendResult(BASE_TOOL+" · "+QUIZ.label, "자동화설비 필기 — "+QUIZ.label, {
+  sendResult(BASE_TOOL, (QUIZ.label||"과목별")+" — 과목별 풀이", {
     score:QUIZ._score, correct:QUIZ._correct, total:QUIZ._total,
-    wrong:QUIZ._wrong.map(k=>QUIZ.qs[k]._k+"-"+QUIZ.qs[k].no), durationSec:QUIZ._dur, detail:rankDetail()
+    wrong:QUIZ._wrong.map(k=>rcWrongOf(QUIZ.qs[k], QUIZ.ans[k])),
+    durationSec:QUIZ._dur, detail:rankDetail(),
+    extra:[(QUIZ.label||"")+" 문제 해결"]
   });
 }
 function reviewQuiz(){

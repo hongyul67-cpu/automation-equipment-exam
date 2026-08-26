@@ -246,6 +246,10 @@
 <script src="data/theory-figs2.js"></script>
 <script src="data/theory-figs3.js"></script>
 <script src="config.js"></script>
+<!-- 수업 슬라이드(전자칠판) — 예전 board.html 이 index 안으로 들어왔습니다.
+     원고는 lesson-board.js, 화면은 board.js(모든 도구 공용) 가 담당합니다. -->
+<script src="lesson-board.js"></script>
+<script src="board.js"></script>
 <script>
 const $=(s,el=document)=>el.querySelector(s);
 const app=$("#app");
@@ -357,6 +361,10 @@ function home(){
         <div class="ic">🎓</div><h3>수업 모드 <span style="font-size:11.5px;color:var(--brand);background:#eef2ff;border-radius:999px;padding:2px 8px;vertical-align:middle">선생님용</span></h3>
         <p><b>설명 → 빈칸 채우기 → 정답 확인 → 확인문제</b> 순서로 진행되는 수업용 화면입니다. 글자 크게 기능으로 화면에 띄워 함께 풀어보세요.</p>
       </div>
+      <div class="mode wide" onclick="boardHome()" style="border-color:#bfdbfe;background:linear-gradient(135deg,#eff6ff,#fff)">
+        <div class="ic">🖥️</div><h3>수업 슬라이드 (전자칠판) <span style="font-size:11.5px;color:var(--brand);background:#eef2ff;border-radius:999px;padding:2px 8px;vertical-align:middle">선생님용</span></h3>
+        <p>프로젝터·전자칠판으로 앞에서 끌고 가는 화면입니다. <b>요점 → 발문 → 퀴즈 → 정답</b> 순서로 하나씩 열며 진행합니다.</p>
+      </div>
       <div class="mode wide" onclick="theoryPick()">
         <div class="ic">📖</div><h3>이론 학습 (개념 정리)</h3>
         <p>시험에 나오는 핵심 개념을 과목별로 정리했어요. 개념을 읽고 <b>바로 관련 기출</b>을 풀 수 있습니다.</p>
@@ -378,6 +386,29 @@ function home(){
       <div class="chip">오답 <b>${wrong}</b>문제</div>
     </div>
   </div>`;
+}
+
+/* ---------------- 수업 슬라이드 (전자칠판) ----------------
+   예전에는 board.html 이 따로 있었다. 입구를 하나로 모으려고 이 안으로 들여왔다.
+   원고는 lesson-board.js, 화면은 board.js(모든 도구가 같은 파일)가 담당한다.
+   이 앱은 밝은 배경이라 board.js 의 어두운 단원 카드를 그대로 두면 겉돈다 →
+   어두운 판 위에 얹어 슬라이드 화면과 이어지게 한다. */
+function boardHome(){
+  app.innerHTML=`
+  <button class="back" onclick="home()">← 홈</button>
+  <div class="card" style="background:#0d1420;border-color:#2c3648">
+    <span class="pill" style="background:#1e2634;color:#9fc0ff;border-color:#2c3648">선생님용</span>
+    <h3 style="margin:10px 0 6px;color:#e9eefa">🖥️ 수업 슬라이드 — 단원을 고르세요</h3>
+    <p style="color:#98a5bd;font-size:13.5px;margin:0 0 14px">
+      요점 → 발문 → 퀴즈 → 정답을 하나씩 엽니다. 넘기기는 아래 <b>이전·다음</b> 단추와 ← → 키만 듣습니다.</p>
+    <div id="boardHomeBox"></div>
+  </div>`;
+  const el=$("#boardHomeBox");
+  if(!window.Board||!(window.LESSON||[]).length){
+    el.innerHTML=`<div class="empty" style="color:#98a5bd">수업자료를 불러오지 못했습니다.</div>`;
+    return;
+  }
+  Board.home(el,{hint:'요점 안의 <b>파란 빈칸</b>은 눌러야 답이 보입니다 — 학생에게 먼저 맞혀 보게 하세요.'});
 }
 
 /* ---------------- CBT ---------------- */

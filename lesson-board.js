@@ -1,12 +1,18 @@
 /* ══════════════════════════════════════════════════════════════
    자동화설비기능사 필기 전자칠판 수업자료 — 슬라이드 원고
-   board.html 에서 window.LESSON / window.UNITS 로 읽는다.
+   index.html 의 수업 슬라이드 화면에서 board.js 가 window.LESSON / window.UNITS 로 읽는다.
 
    필기 6과목(기계제도 · 기계가공/측정 · 기계요소/조립 · 작업안전 ·
    전기/제어 · PLC/자동화)을 그대로 단원으로 삼았다.
    기출에서 계산으로 나오는 식은 슬라이드에 그대로 박아 둔다.
    ══════════════════════════════════════════════════════════════ */
 
+/* ⚠ 이 파일 전체를 함수 안에 넣어 둔 이유
+   index.html 의 '수업 모드' 가 이미 전역에 `let LESSON` 을 쓰고 있다.
+   여기서 다시 `var LESSON` 을 선언하면
+   "Identifier 'LESSON' has already been declared" 로 페이지 전체가 죽는다.
+   그래서 안쪽에 가둬 두고 window.LESSON / window.UNITS 로만 내보낸다. */
+(function(){
 var HOME = 'https://hongyul67-cpu.github.io/automation-equipment-exam/';
 var JEDO = 'https://hongyul67-cpu.github.io/drawing-master-hub/';
 
@@ -70,7 +76,7 @@ var LESSON = [
   anso:['평행도','직각도','평면도','동심도'],
   ansa:2,
   anse:'<b>평면도</b>는 모양 공차라 그 형체 하나만 보면 되므로 데이텀이 필요 없습니다. 평행도·직각도·동심도는 기준이 있어야 잴 수 있습니다.',
-  go:['📐 제도 전자칠판 자료로 더 보기', JEDO + 'board.html']
+  go:['📐 제도 전자칠판 자료로 더 보기', JEDO]
 },
 
 {
@@ -833,3 +839,5 @@ var UNITS = (function(){
 
 window.LESSON = LESSON;
 window.UNITS  = UNITS;
+
+})();

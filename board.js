@@ -310,7 +310,8 @@
     if (S.step === 0) {
       elBody.scrollTop = 0;
     } else {
-      var fresh = elIn.querySelector('.bd-exp') || elIn.querySelector('.bd-quiz') || elIn.querySelector('.bd-ask');
+      var fresh = elIn.querySelector('.bd-go') || elIn.querySelector('.bd-exp') ||
+                  elIn.querySelector('.bd-quiz') || elIn.querySelector('.bd-ask');
       if (fresh) fresh.scrollIntoView({ block: 'end' }); else elBody.scrollTop = 0;
     }
     elPrev.disabled = (S.i === 0 && S.step === 0);

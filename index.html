@@ -60,6 +60,11 @@
   .choice.correct{border-color:var(--ok);background:var(--ok-bg)}
   .choice.wrong{border-color:var(--no);background:var(--no-bg)}
   .choice.disabled{cursor:default}
+  /* 위줄(A̅)·밑줄(24̲)·취소선(24̶) — 글꼴에 없으면 안 보이므로 직접 그린다 */
+  .ovl,.und,.stk{white-space:nowrap}
+  .ovl{border-top:1.7px solid currentColor;padding-top:1px}
+  .und{border-bottom:1.7px solid currentColor;padding-bottom:1px}
+  .stk{text-decoration:line-through;text-decoration-thickness:1.7px}
   .expl{margin-top:12px;background:#fffbeb;border:1px solid #fde68a;border-radius:12px;padding:12px 14px;font-size:14px;line-height:1.65;color:#78350f;display:none;word-break:keep-all}
   .expl.show{display:block}
   .expl b{color:#b45309}
@@ -342,6 +347,15 @@ const examKey=e=>e.year+"-"+e.round;
 function findQ(k,no){const e=EXAMS.find(x=>examKey(x)===k);return e?e.questions.find(q=>q.no===no):null;}
 function allSubjects(){const s=new Set();EXAMS.forEach(e=>e.questions.forEach(q=>s.add(q.subject)));return[...s];}
 function esc(t){return(t||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+/* 문자 위·아래에 붙는 결합 부호(위줄 A̅, 밑줄 24̲, 취소선 24̶)는
+   기기 글꼴에 따라 아예 안 보인다. — 보기가 전부 같아 보이는 문제가 생긴다.
+   그래서 부호를 떼고 CSS 선으로 다시 그려 준다. */
+const MARKCLS={"̅":"ovl","̄":"ovl","̲":"und","̶":"stk"};
+function fmt(t){
+  /* Ā 처럼 한 글자로 붙은 윗줄도 분리해 다른 윗줄과 같은 모양으로 보이게 한다 */
+  return esc(String(t==null?"":t).replace(/Ā/g,"A̅")).replace(/(?:[^̀-ͯ][̶̲̄̅])+/g,
+    m=>`<span class="${MARKCLS[m[1]]}">${m.replace(/[̀-ͯ]/g,"")}</span>`);
+}
 
 /* ---------------- HOME ---------------- */
 function home(){
@@ -416,6 +430,7 @@ function boardHome(){
 /* ---------------- CBT ---------------- */
 function startCBTpick(){
   const opts=EXAMS.map((e,i)=>`<option value="${i}">${e.title}</option>`).join("");
+  const cls=fixMode();
   app.innerHTML=`
   <button class="back" onclick="home()">← 홈</button>
   <div class="card">
@@ -423,14 +438,60 @@ function startCBTpick(){
     <h3 style="margin:10px 0 6px">회차 선택</h3>
     <p style="color:var(--muted);font-size:13.5px;margin:0 0 14px">60문항 · 제한시간 60분 · 60점 이상 합격</p>
     <div class="row"><select id="exSel">${opts}</select></div>
-    <div class="navbtns"><span></span>
-      <button class="btn primary" onclick="startCBT(+$('#exSel').value)">시험 시작 ▶</button></div>
+    <label style="display:flex;align-items:center;gap:8px;margin-top:14px;font-size:13.5px;color:#475569">
+      <input type="checkbox" id="mixCbt" ${cls?"":"checked"}> 문제·보기 순서 섞기</label>
+    <div style="font-size:12.5px;color:var(--muted);margin-top:6px;line-height:1.6">
+      ${cls
+        ? "🎓 <b>수업용 링크</b>로 들어왔습니다. 꺼 두면 기출 원래 번호 그대로라 «42번 보세요» 가 그대로 통합니다.<br>켜더라도 오늘 이 링크로 들어온 학생은 모두 같은 순서를 받습니다."
+        : "회차에 들어 있는 문제는 그대로이고 나오는 <b>차례</b>와 <b>보기 차례</b>만 바뀝니다.<br>같은 회차를 다시 풀어도 «정답은 3번» 을 외우게 되지 않습니다."}
+    </div>
+    <div class="navbtns" style="margin-top:14px"><span></span>
+      <button class="btn primary" onclick="startCBT(+$('#exSel').value,$('#mixCbt').checked)">시험 시작 ▶</button></div>
   </div>`;
 }
 let CBT=null;
-function startCBT(idx){
-  const e=EXAMS[idx];
-  CBT={exam:e,i:0,ans:{},submitted:false,left:60*60,timer:null};
+/* 수업용 링크(?fix=…)로 들어왔는가 — fixorder.js 가 켜 준다.
+   이때는 Math.random 이 그날치로 고정되어 있어, 섞더라도 모두 같은 순서가 나온다. */
+function fixMode(){return !!(window.FixOrder&&window.FixOrder.on);}
+function shuffled(a,rnd){a=a.slice();
+  for(let i=a.length-1;i>0;i--){const j=Math.floor((rnd||Math.random)()*(i+1));const t=a[i];a[i]=a[j];a[j]=t;}
+  return a;}
+/* 이 회차를 섞을 때 쓸 난수.
+   수업용 링크에서는 그날 시드로 우리끼리 만들어 쓴다 — 다른 위젯이 난수를
+   몇 번 뽑든 상관없이, 같은 날 같은 회차면 모든 학생이 같은 순서를 받는다. */
+function mixRnd(idx){
+  if(!fixMode())return Math.random;
+  let a=(((window.FixOrder.seed>>>0)+idx*0x9E3779B9)>>>0);
+  return function(){a=(a+0x6D2B79F5)|0;let t=Math.imul(a^(a>>>15),1|a);
+    t=(t+Math.imul(t^(t>>>7),61|t))^t;return((t^(t>>>14))>>>0)/4294967296;};
+}
+/* 보기를 섞어도 되는 문제인가.
+   ① 보기가 그림인 문제는 ①~④ 가 곧 그림 속 차례라 섞으면 답이 어긋난다.
+   ② 문제나 보기에 ①~④ 가 적혀 있으면 그 번호가 도면 품번 같은 다른 뜻일 수 있다.
+   ③ «위 모두 옳다» 류 보기는 자리를 옮기면 말이 되지 않는다. */
+const CIRCLED=/[①②③④]/;
+const AGGREG=/모두 (옳|맞|정답|해당)|위 모두|위의 모두|정답이 없|해당 없/;
+function mixable(q){
+  return !q.choicesImg && !CIRCLED.test(q.q||"")
+      && !(q.choices||[]).some(c=>CIRCLED.test(c)||AGGREG.test(c));
+}
+/* 보기를 섞고 정답 번호를 새 자리로 옮긴다. 해설이 «③은 틀림» 처럼
+   번호를 짚는 경우가 많아 해설 속 ①~④ 도 같이 바꿔 준다. */
+function mixChoices(q,rnd){
+  if(!mixable(q))return q;
+  const ord=shuffled(q.choices.map((_,i)=>i),rnd);    // ord[새자리] = 옛자리
+  const to=[];ord.forEach((old,now)=>{to[old]=now;}); // to[옛자리] = 새자리
+  return Object.assign({},q,{
+    choices:ord.map(i=>q.choices[i]),
+    answer:to[q.answer-1]+1,
+    explain:(q.explain||"").replace(/[①②③④]/g,ch=>NUM[to[NUM.indexOf(ch)-1]+1])
+  });
+}
+function mixExam(e,idx){const rnd=mixRnd(idx);
+  return Object.assign({},e,{questions:shuffled(e.questions,rnd).map(q=>mixChoices(q,rnd))});}
+function startCBT(idx,mix){
+  const e=mix?mixExam(EXAMS[idx],idx):EXAMS[idx];
+  CBT={exam:e,idx:idx,mix:!!mix,i:0,ans:{},submitted:false,left:60*60,timer:null};
   CBT.timer=setInterval(()=>{CBT.left--;if(CBT.left<=0){clearInterval(CBT.timer);submitCBT()}else updateTimer();},1000);
   renderCBT();
 }
@@ -445,8 +506,8 @@ function renderCBT(){
     <span class="timer" id="timer">⏱ 60:00</span>
   </div>
   <div class="card">
-    <div class="qhead"><span class="qno">문 ${q.no} / ${e.questions.length}</span><span class="qsubj">${esc(q.subject)}</span></div>
-    <div class="qtext">${esc(q.q)}</div>
+    <div class="qhead"><span class="qno">문 ${CBT.i+1} / ${e.questions.length}</span><span class="qsubj">${esc(q.subject)}</span></div>
+    <div class="qtext">${fmt(q.q)}</div>
     ${q.img?`<img class="qimg" src="${q.img}" alt="문제 그림">`:""}
     <div class="choices" id="choices"></div>
     <div class="navbtns">
@@ -464,10 +525,10 @@ function renderCBT(){
   const ch=$("#choices");
   q.choices.forEach((c,k)=>{const n=k+1;const sel=CBT.ans[q.no]===n;
     const d=document.createElement("div");d.className="choice"+(sel?" sel":"");
-    d.innerHTML=`<span class="num">${NUM[n]}</span><span>${q.choicesImg?"":esc(c)}</span>`;
+    d.innerHTML=`<span class="num">${NUM[n]}</span><span>${q.choicesImg?"":fmt(c)}</span>`;
     d.onclick=()=>{CBT.ans[q.no]=n;renderCBT();};ch.appendChild(d);});
   const omr=$("#omr");
-  e.questions.forEach((qq,k)=>{const b=document.createElement("button");b.textContent=qq.no;
+  e.questions.forEach((qq,k)=>{const b=document.createElement("button");b.textContent=k+1;
     if(CBT.ans[qq.no])b.classList.add("done");if(k===CBT.i)b.classList.add("cur");
     b.onclick=()=>{CBT.i=k;renderCBT();};omr.appendChild(b);});
   updateTimer();
@@ -499,7 +560,7 @@ function resultCBT(correct,wrongList){
     ${rpBox(CBT._rp)}
     ${true?`<button class="btn" style="width:100%;margin-top:14px;background:#16a34a;color:#fff" onclick="submitResult()">📤 선생님께 결과 제출</button>`:""}
     <div class="navbtns" style="margin-top:12px">
-      <button class="btn ghost" onclick="startCBT(EXAMS.indexOf(CBT.exam))">다시 풀기</button>
+      <button class="btn ghost" onclick="startCBT(CBT.idx,CBT.mix)">다시 풀기</button>
       <button class="btn primary" onclick="reviewCBT()">틀린 문제 해설 (${wrongList.length})</button>
     </div>
   </div>`;
@@ -577,15 +638,15 @@ function reviewCBT(){
     const my=CBT.ans[q.no];
     html+=`<div class="miniq">
       <div class="qhead"><span class="qno">문 ${q.no}</span><span class="qsubj">${esc(q.subject)}</span></div>
-      <div class="qtext">${esc(q.q)}</div>
+      <div class="qtext">${fmt(q.q)}</div>
       ${q.img?`<img class="qimg" src="${q.img}">`:""}
       <div style="font-size:14px;line-height:1.7">
-        ${q.choices.map((c,k)=>{const n=k+1;let t=q.choicesImg?"":esc(c);
+        ${q.choices.map((c,k)=>{const n=k+1;let t=q.choicesImg?"":fmt(c);
           if(n===q.answer)return `<div class="tag-ok">${NUM[n]} ${t} ✔ 정답</div>`;
           if(n===my)return `<div class="tag-no">${NUM[n]} ${t} ✘ 내 답</div>`;
           return `<div style="color:#94a3b8">${NUM[n]} ${t}</div>`;}).join("")}
       </div>
-      <div class="expl show"><b>해설</b> · ${esc(q.explain)}</div>
+      <div class="expl show"><b>해설</b> · ${fmt(q.explain)}</div>
     </div>`;
   });
   html+=`</div>`;app.innerHTML=html;
@@ -641,10 +702,10 @@ function renderStudy(){
   <button class="back" onclick="${STUDY._back?"studyBack()":"studyPick()"}">← ${STUDY._back?"개념으로":"범위 변경"}</button>
   <div class="card">
     <div class="qhead"><span class="qno">${STUDY.i+1} / ${STUDY.qs.length}</span><span class="qsubj">${esc(q.subject)} · ${q._k}</span></div>
-    <div class="qtext">${esc(q.q)}</div>
+    <div class="qtext">${fmt(q.q)}</div>
     ${q.img?`<img class="qimg" src="${q.img}">`:""}
     <div class="choices" id="choices"></div>
-    <div class="expl ${done?"show":""}">${done?`<b class="ansline">✅ 정답 ${NUM[q.answer]}번${q.choicesImg?" (위 그림 참고)":""}</b>`:""}<b>해설</b> · ${esc(q.explain)}</div>
+    <div class="expl ${done?"show":""}">${done?`<b class="ansline">✅ 정답 ${NUM[q.answer]}번${q.choicesImg?" (위 그림 참고)":""}</b>`:""}<b>해설</b> · ${fmt(q.explain)}</div>
     <div class="navbtns">
       <button class="btn ghost" onclick="studyGo(-1)" ${STUDY.i===0?"disabled":""}>◀ 이전</button>
       <button class="btn primary" onclick="studyGo(1)" ${STUDY.i===STUDY.qs.length-1?"disabled":""}>다음 ▶</button>
@@ -654,7 +715,7 @@ function renderStudy(){
   q.choices.forEach((c,k)=>{const n=k+1;const d=document.createElement("div");
     let cls="choice";
     if(done){cls+=" disabled";if(n===q.answer)cls+=" correct";else if(n===picked)cls+=" wrong";}
-    d.className=cls;d.innerHTML=`<span class="num">${NUM[n]}</span><span>${q.choicesImg?"":esc(c)}</span>`;
+    d.className=cls;d.innerHTML=`<span class="num">${NUM[n]}</span><span>${q.choicesImg?"":fmt(c)}</span>`;
     if(!done)d.onclick=()=>{STUDY.picked=n;const ok=n===q.answer;
       const st=LS.getStat();st.solved++;if(ok)st.correct++;LS.setStat(st);
       if(!ok)LS.addWrong(q._k,q.no);SYNC.saveSoon();renderStudy();};
@@ -681,10 +742,10 @@ function renderQuiz(){
   </div>
   <div class="card">
     <div class="qhead"><span class="qno">${QUIZ.i+1} / ${N}</span><span class="qsubj">${esc(q.subject)} · ${q._k}</span></div>
-    <div class="qtext">${esc(q.q)}</div>
+    <div class="qtext">${fmt(q.q)}</div>
     ${q.img?`<img class="qimg" src="${q.img}">`:""}
     <div class="choices" id="choices"></div>
-    <div class="expl ${done?"show":""}">${done?`<b class="ansline">${ok?"⭕ 정답입니다!":"❌ 틀렸어요"} · 정답 ${NUM[q.answer]}번${q.choicesImg?" (위 그림 참고)":""}</b>`:""}<b>해설</b> · ${esc(q.explain)}</div>
+    <div class="expl ${done?"show":""}">${done?`<b class="ansline">${ok?"⭕ 정답입니다!":"❌ 틀렸어요"} · 정답 ${NUM[q.answer]}번${q.choicesImg?" (위 그림 참고)":""}</b>`:""}<b>해설</b> · ${fmt(q.explain)}</div>
     <div class="navbtns">
       <button class="btn ghost" onclick="quizGo(-1)" ${QUIZ.i===0?"disabled":""}>◀ 이전</button>
       ${QUIZ.i===N-1
@@ -703,7 +764,7 @@ function renderQuiz(){
     let cls="choice";
     if(done){cls+=" disabled";if(n===q.answer)cls+=" correct";else if(n===picked)cls+=" wrong";}
     d.className=cls;
-    d.innerHTML=`<span class="num">${NUM[n]}</span><span>${q.choicesImg?"":esc(c)}</span>`;
+    d.innerHTML=`<span class="num">${NUM[n]}</span><span>${q.choicesImg?"":fmt(c)}</span>`;
     if(!done)d.onclick=()=>{           // 한 번 고르면 즉시 채점되고 바꿀 수 없음
       QUIZ.ans[QUIZ.i]=n;
       const st=LS.getStat();st.solved++;if(n===q.answer)st.correct++;LS.setStat(st);
@@ -764,15 +825,15 @@ function reviewQuiz(){
   wrong.forEach(k=>{const q=QUIZ.qs[k],my=QUIZ.ans[k];
     html+=`<div class="miniq">
       <div class="qhead"><span class="qno">${k+1}번</span><span class="qsubj">${esc(q.subject)} · ${q._k}</span></div>
-      <div class="qtext">${esc(q.q)}</div>
+      <div class="qtext">${fmt(q.q)}</div>
       ${q.img?`<img class="qimg" src="${q.img}">`:""}
       <div style="font-size:14px;line-height:1.7">
-        ${q.choices.map((c,i)=>{const n=i+1;let t=q.choicesImg?"":esc(c);
+        ${q.choices.map((c,i)=>{const n=i+1;let t=q.choicesImg?"":fmt(c);
           if(n===q.answer)return `<div class="tag-ok">${NUM[n]} ${t} ✔ 정답</div>`;
           if(n===my)return `<div class="tag-no">${NUM[n]} ${t} ✘ 내 답</div>`;
           return `<div style="color:#94a3b8">${NUM[n]} ${t}</div>`;}).join("")}
       </div>
-      <div class="expl show"><b>해설</b> · ${esc(q.explain)}</div>
+      <div class="expl show"><b>해설</b> · ${fmt(q.explain)}</div>
     </div>`;});
   html+=`</div>`;app.innerHTML=html;
 }
@@ -1109,15 +1170,15 @@ function lessonQuizHtml(){
     <button class="btn primary" onclick="lessonNextCard()">다음 개념 ▶</button></div>`;
   const q=qz.qs[qz.i],done=qz.picked!=null;
   return `<div class="lhint">📝 확인문제 ${qz.i+1} / ${qz.qs.length} · ${esc(q._k)} 기출</div>
-    <div class="qtext">${esc(q.q)}</div>
+    <div class="qtext">${fmt(q.q)}</div>
     ${q.img?`<img class="qimg" src="${q.img}">`:""}
     <div class="choices">
       ${q.choices.map((c,n)=>{const num=n+1;let cls="choice";
         if(done){cls+=" disabled";if(num===q.answer)cls+=" correct";else if(num===qz.picked)cls+=" wrong";}
         return `<div class="${cls}" ${done?"":`onclick="lessonAnswer(${num})"`}>
-          <span class="num">${NUM[num]}</span><span>${q.choicesImg?"":esc(c)}</span></div>`;}).join("")}
+          <span class="num">${NUM[num]}</span><span>${q.choicesImg?"":fmt(c)}</span></div>`;}).join("")}
     </div>
-    <div class="expl ${done?"show":""}">${done?`<b class="ansline">✅ 정답 ${NUM[q.answer]}번${q.choicesImg?" (위 그림 참고)":""}</b>`:""}<b>해설</b> · ${esc(q.explain)}</div>
+    <div class="expl ${done?"show":""}">${done?`<b class="ansline">✅ 정답 ${NUM[q.answer]}번${q.choicesImg?" (위 그림 참고)":""}</b>`:""}<b>해설</b> · ${fmt(q.explain)}</div>
     <div class="lessonnav">
       <button class="btn ghost" onclick="lessonBackToSlides()">◀ 설명</button>
       ${qz.i<qz.qs.length-1
@@ -1170,10 +1231,10 @@ function renderNote(){
   <button class="back" onclick="home()">← 홈</button>
   <div class="card">
     <div class="qhead"><span class="qno">오답 ${NOTE.i+1} / ${NOTE.qs.length}</span><span class="qsubj">${esc(q.subject)} · ${q._k}</span></div>
-    <div class="qtext">${esc(q.q)}</div>
+    <div class="qtext">${fmt(q.q)}</div>
     ${q.img?`<img class="qimg" src="${q.img}">`:""}
     <div class="choices" id="choices"></div>
-    <div class="expl ${done?"show":""}">${done?`<b class="ansline">✅ 정답 ${NUM[q.answer]}번${q.choicesImg?" (위 그림 참고)":""}</b>`:""}<b>해설</b> · ${esc(q.explain)}</div>
+    <div class="expl ${done?"show":""}">${done?`<b class="ansline">✅ 정답 ${NUM[q.answer]}번${q.choicesImg?" (위 그림 참고)":""}</b>`:""}<b>해설</b> · ${fmt(q.explain)}</div>
     <div class="navbtns">
       <button class="btn ghost" onclick="noteGo(-1)" ${NOTE.i===0?"disabled":""}>◀ 이전</button>
       <button class="btn ghost" onclick="masterNote()">✓ 익힘(삭제)</button>
@@ -1183,7 +1244,7 @@ function renderNote(){
   const ch=$("#choices");
   q.choices.forEach((c,k)=>{const n=k+1;const d=document.createElement("div");
     let cls="choice";if(done){cls+=" disabled";if(n===q.answer)cls+=" correct";else if(n===picked)cls+=" wrong";}
-    d.className=cls;d.innerHTML=`<span class="num">${NUM[n]}</span><span>${q.choicesImg?"":esc(c)}</span>`;
+    d.className=cls;d.innerHTML=`<span class="num">${NUM[n]}</span><span>${q.choicesImg?"":fmt(c)}</span>`;
     if(!done)d.onclick=()=>{NOTE.picked=n;renderNote();};ch.appendChild(d);});
 }
 function noteGo(d){const ni=NOTE.i+d;if(ni<0||ni>=NOTE.qs.length)return;NOTE.i=ni;NOTE.picked=null;renderNote();}

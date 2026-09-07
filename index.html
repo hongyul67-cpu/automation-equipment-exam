@@ -162,7 +162,7 @@
   body.big table.sl-tbl{font-size:20px}
   body.big .sl-tip{font-size:23px}
   body.big .sl{min-height:400px}
-  /* ── 전자칠판 모드: 큰 화면 + 손가락 터치 ── */
+  /* ── 큰 화면 모드: 교실 화면 + 손가락 터치 ── */
   body.board .wrap{max-width:1400px;padding:14px 22px 40px}
   body.board .slidecard{padding:26px 30px}
   body.board .sl{min-height:58vh}
@@ -1020,7 +1020,7 @@ function startTheoryQuiz(si,ci,ki){
 let LESSON=null, BLANKS=[];
 function toggleBig(){document.body.classList.toggle("board");
   if(LESSON&&LESSON.phase)renderLesson();
-  else{const b=$("#bigbtn");if(b)b.textContent=document.body.classList.contains("board")?"📺 칠판 끄기":"📺 전자칠판";}}
+  else{const b=$("#bigbtn");if(b)b.textContent=document.body.classList.contains("board")?"📺 큰 화면 끄기":"📺 큰 화면";}}
 function lessonHome(){ if(SYNC.on()&&!SYNC.me())gate(); else home(); }
 function lessonPick(){
   if(!THEORY.length){app.innerHTML=`<button class="back" onclick="lessonHome()">← 홈</button><div class="card"><div class="empty">이론 데이터를 불러오지 못했습니다.</div></div>`;return;}
@@ -1054,7 +1054,7 @@ function lessonChapters(si){
   </div>`;
 }
 function lessonStart(si,ci){LESSON={si,ci,ki:0,slide:0,slides:[],blanked:false,phase:"slide",quiz:null};
-  document.body.classList.add("board");           // 수업 모드 = 전자칠판 모드로 시작
+  document.body.classList.add("board");           // 이론 학습은 큰 화면으로 시작
   LESSON.slides=buildSlides(THEORY[si],THEORY[si].chapters[ci].cards[0]);renderLesson();}
 function exitBoard(){document.body.classList.remove("board");}
 
@@ -1153,7 +1153,7 @@ function renderLesson(){
   <div class="row" style="justify-content:space-between;color:#fff;margin-bottom:8px">
     <button class="back" onclick="exitBoard();lessonChapters(${LESSON.si})">← 단원 선택</button>
     <span style="color:#c7d2fe;font-size:12.5px">${esc(s.subject)} · 개념 ${LESSON.ki+1}/${c.cards.length}</span>
-    <button class="back" id="bigbtn" onclick="toggleBig()">${document.body.classList.contains("board")?"📺 칠판 끄기":"📺 전자칠판"}</button>
+    <button class="back" id="bigbtn" onclick="toggleBig()">${document.body.classList.contains("board")?"📺 큰 화면 끄기":"📺 큰 화면"}</button>
   </div>
   <div class="card slidecard">
     <div class="sl-top">

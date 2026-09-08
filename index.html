@@ -476,8 +476,12 @@ function gate(){
     <div class="row">이름 <input id="inName" placeholder="예: 홍길동" style="flex:1;padding:10px;border:1px solid #cbd5e1;border-radius:10px;font-size:15px"></div>
     <div class="navbtns" style="margin-top:16px"><span></span><button class="btn primary" onclick="doLogin()">시작 ▶</button></div>
     <div style="margin-top:18px;padding-top:16px;border-top:1px dashed var(--line);text-align:center">
-      <button class="btn ghost" style="width:100%" onclick="lessonPick()">🎓 선생님용 수업 모드 <span style="font-weight:400;color:var(--muted)">(이름 입력 없이 바로)</span></button>
-      <div style="font-size:12px;color:var(--muted);margin-top:8px">수업용 설명·빈칸·확인문제 화면입니다. 기록은 저장되지 않아요.</div>
+      <!-- 선생님은 이름을 넣지 않고 바로 들어간다.
+           예전에는 이 자리가 「🎓 수업 모드」였는데, 선생님용 큰 화면이 둘이라 헷갈려
+           2026-09-08 에 「📽️ 수업 슬라이드」 하나로 합쳤다(이론 카드가 그 안 단원으로 들어갔다).
+           되돌리려면 lessonPick() 단추를 다시 두면 된다 — 함수는 그대로 있다. -->
+      <button class="btn ghost" style="width:100%" onclick="boardHome()">📽️ 선생님용 수업 슬라이드 <span style="font-weight:400;color:var(--muted)">(이름 입력 없이 바로)</span></button>
+      <div style="font-size:12px;color:var(--muted);margin-top:8px">요점 → 발문 → 퀴즈 → 정답을 하나씩 열고, 화면에 바로 판서합니다. 이론 설명도 이 안에 들어 있어요.</div>
     </div>
   </div>`;
   const me=SYNC.me();if(me){$("#inCls").value=me.cls||"";$("#inName").value=me.name||"";}
@@ -523,10 +527,7 @@ function home(){
         <div class="ic">📝</div><h3>CBT 모의고사</h3>
         <p>실제 시험처럼 60문항·60분 타이머로 풀고 자동 채점. 틀린 문제는 오답노트에 자동 저장됩니다.</p>
       </div>
-      <div class="mode wide" onclick="lessonPick()" style="border-color:#c7d2fe;background:linear-gradient(135deg,#eef2ff,#fff)">
-        <div class="ic">🎓</div><h3>수업 모드 <span style="font-size:11.5px;color:var(--brand);background:#eef2ff;border-radius:999px;padding:2px 8px;vertical-align:middle">선생님용</span></h3>
-        <p><b>설명 → 빈칸 채우기 → 정답 확인 → 확인문제</b> 순서로 진행되는 수업용 화면입니다. 글자 크게 기능으로 화면에 띄워 함께 풀어보세요.</p>
-      </div>
+      <!-- 🎓 수업 모드 카드도 뺐다 — 수업 슬라이드로 합침 -->
       <div class="mode wide" onclick="boardHome()" style="border-color:#bfdbfe;background:linear-gradient(135deg,#eff6ff,#fff)">
         <div class="ic">📽️</div><h3>수업 슬라이드 열기 <span style="font-size:11.5px;color:var(--brand);background:#eef2ff;border-radius:999px;padding:2px 8px;vertical-align:middle">선생님용</span></h3>
         <p>프로젝터·큰 화면으로 앞에서 끌고 가는 화면입니다. <b>요점 → 발문 → 퀴즈 → 정답</b> 순서로 하나씩 열며 진행합니다.</p>
@@ -567,6 +568,42 @@ function boardRc(url){
   if(!rc) return url;
   return url+(url.indexOf("?")>=0?"&":"?")+"rc="+encodeURIComponent(rc);
 }
+/* ── 이론(THEORY)을 수업 슬라이드로 바꾼다 ────────────────────────────
+   선생님용 큰 화면이 「🎓 수업 모드」와 「📽️ 수업 슬라이드」 둘이라 헷갈린다는 말이 있어,
+   수업 모드가 쓰던 이론 카드를 슬라이드로 만들어 슬라이드 안으로 넣었다(2026-09-08).
+   빈칸은 board-pro 의 {{…}} 표기를 쓴다 — 눌러야 답이 보인다.
+   카드 하나가 길면 body 묶음마다 한 장으로 나눈다(한 슬라이드 = 한 화면). */
+function theoryToSlides(){
+  var out = [], T = window.THEORY || [];
+  function blankify(txt, keys){
+    var s = String(txt == null ? '' : txt);
+    /* 카드가 정해 둔 핵심어만 빈칸으로. 태그 안은 건드리지 않는다. */
+    (keys || []).forEach(function(k){
+      if(!k || k.length < 2) return;
+      var re = new RegExp('(?![^<]*>)(' + k.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + ')');
+      s = s.replace(re, '{{$1}}');
+    });
+    return s;
+  }
+  T.forEach(function(sub){
+    (sub.chapters || []).forEach(function(ch){
+      (ch.cards || []).forEach(function(card){
+        var groups = card.body || [];
+        if(!groups.length) return;
+        groups.forEach(function(g, gi){
+          var pts = (g.ul || []).slice(0, 5).map(function(li){ return blankify(li, card.q); });
+          if(!pts.length) return;
+          out.push({
+            u: (sub.icon || '📖') + ' 이론 · ' + (sub.subject || ''),
+            t: card.t + (groups.length > 1 ? ' — ' + (g.h || ('' + (gi+1))) : (g.h ? ' — ' + g.h : '')),
+            pts: pts
+          });
+        });
+      });
+    });
+  });
+  return out;
+}
 function boardDeck(list){
   return list.map(s=>{
     if(!s.go) return s;
@@ -592,6 +629,21 @@ function boardHome(){
   menu.push({ icon:"📚", wide:true, title:"전체 이어서 ("+ALL.length+"장)",
               desc:"필기 6과목을 순서대로 진행합니다.",
               run:{ kind:"lesson", deck:boardDeck(ALL) } });
+
+  /* 예전 「🎓 수업 모드」가 쓰던 이론 카드도 여기서 함께 연다 — 선생님용 화면을 하나로 모았다 */
+  var TH = theoryToSlides();
+  if(TH.length){
+    var byU = {};
+    TH.forEach(function(s){ (byU[s.u] = byU[s.u] || []).push(s); });
+    Object.keys(byU).forEach(function(u){
+      menu.push({ icon:"📖", title:u.replace(/^\S+\s/,''),
+                  desc:"이론 설명 " + byU[u].length + "장 · 빈칸을 눌러 답 공개",
+                  run:{ kind:"lesson", deck:byU[u] } });
+    });
+    menu.push({ icon:"📖", wide:true, title:"이론 전체 이어서 (" + TH.length + "장)",
+                desc:"과목 순서대로 이론 설명만 이어서 진행합니다.",
+                run:{ kind:"lesson", deck:TH } });
+  }
   menu.push({ icon:"⬜", wide:true, title:"빈 칠판",
               desc:"슬라이드 없이 판서만. 회로나 도면을 직접 그려 설명할 때.",
               run:{ kind:"blank" } });

@@ -67,6 +67,13 @@
   .stk{text-decoration:line-through;text-decoration-thickness:1.7px}
   .expl{margin-top:12px;background:#fffbeb;border:1px solid #fde68a;border-radius:12px;padding:12px 14px;font-size:14px;line-height:1.65;color:#78350f;display:none;word-break:keep-all}
   .expl.show{display:block}
+  .xfig{margin-top:12px;display:grid;gap:14px}
+  .xfig-h{font-size:13px;font-weight:700;color:#92400e}
+  .xfig-h small{font-weight:400;color:#a16207;margin-left:4px}
+  .xfig figure.fig{max-width:520px;width:100%;margin:0 auto}
+  .xfig figure.fig figcaption{color:#78350f}
+  .cardfig{margin:16px 0 6px}
+  .cardfig figure.fig figcaption{color:var(--muted)}
   .expl b{color:#b45309}
   .expl b.ansline{display:block;color:#166534;background:#dcfce7;border:1px solid #86efac;border-radius:8px;padding:6px 10px;margin-bottom:8px;font-size:15px}
   .navbtns{display:flex;justify-content:space-between;gap:10px;margin-top:16px}
@@ -212,7 +219,7 @@
   @media(max-width:520px){.omr{grid-template-columns:repeat(8,1fr)}.modes{grid-template-columns:1fr}.mode.wide{grid-column:auto}}
 </style>
 </head>
-<body data-build="fdd2b90f">
+<body data-build="0cd7c024">
 <div class="wrap">
   <header class="top">
     <div class="logo">⚙️</div>
@@ -234,6 +241,10 @@
 <script src="data/theory-figs.js"></script>
 <script src="data/theory-figs2.js"></script>
 <script src="data/theory-figs3.js"></script>
+<!-- 해설 · 이론 카드 그림 (해설01) — 공용 fig.js → 다른 도구에서 복사한 그림 → 이 도구의 그림 모음 -->
+<script src="https://hongyul67-cpu.github.io/links/fig.js"></script>
+<script src="figs-copied.js"></script>
+<script src="figs.js"></script>
 <script src="config.js"></script>
 
 <!-- ══ 기출 잠금 ══════════════════════════════════════════════════
@@ -524,6 +535,15 @@ function fmt(t){
     m=>`<span class="${MARKCLS[m[1]]}">${m.replace(/[̀-ͯ]/g,"")}</span>`);
 }
 
+/* 해설 그림 — 채점이 끝나 해설이 열린 뒤에만 그린다(문제 화면에 그림 속 정답이 미리 보이지 않게).
+   어떤 그림을 붙일지는 figs.js 의 explFigKeys(문제 + 정답 보기 + 해설 글자로 고른다). 최대 2장. */
+function xfigs(q,done){
+  if(!done||!window.FIG||!window.explFigKeys)return "";
+  let ks=[];try{ks=window.explFigKeys(q,2);}catch(e){}
+  if(!ks.length)return "";
+  return `<div class="xfig"><div class="xfig-h">🖼️ 그림으로 보기 <small>누르면 크게</small></div>${ks.map(k=>FIG.figure(k)).join("")}</div>`;
+}
+
 /* ---------------- HOME ---------------- */
 function home(){
   const st=LS.getStat(), wrong=LS.getWrong().length;
@@ -603,14 +623,26 @@ function theoryToSlides(){
       (ch.cards || []).forEach(function(card){
         var groups = card.body || [];
         if(!groups.length) return;
+        /* 카드의 그림(옛 이론 그림 + 해설 그림 중 이 카드에 붙인 것)을 슬라이드에 한 장씩 나눠 단다.
+           슬라이드는 빈칸 수업이라 그림 속 정답 이름표(ans)는 ? 로 가린다(labels:false). */
+        var key = sub.subject + '|' + card.t, pics = [];
+        ((window.THEORY_FIGS || {})[key] || []).forEach(function(f){
+          if(window.paperSvg) pics.push({ svg: window.paperSvg(f.svg), cap: f.cap || '' });
+        });
+        if(window.cardFigKeys && window.FIG) window.cardFigKeys(key).forEach(function(k){
+          pics.push({ svg: FIG.svgOf(k, { labels: false }), cap: FIG.cap(k) });
+        });
+        var pi = 0;
         groups.forEach(function(g, gi){
           var pts = (g.ul || []).slice(0, 5).map(function(li){ return blankify(li, card.q); });
           if(!pts.length) return;
-          out.push({
+          var sl = {
             u: (sub.icon || '📖') + ' 이론 · ' + (sub.subject || ''),
             t: card.t + (groups.length > 1 ? ' — ' + (g.h || ('' + (gi+1))) : (g.h ? ' — ' + g.h : '')),
             pts: pts
-          });
+          };
+          if(pics[pi]){ sl.svg = pics[pi].svg; sl.cap = pics[pi].cap; pi++; }
+          out.push(sl);
         });
       });
     });
@@ -889,7 +921,7 @@ function reviewCBT(){
           if(n===my)return `<div class="tag-no">${NUM[n]} ${t} ✘ 내 답</div>`;
           return `<div style="color:#94a3b8">${NUM[n]} ${t}</div>`;}).join("")}
       </div>
-      <div class="expl show"><b>해설</b> · ${fmt(q.explain)}</div>
+      <div class="expl show"><b>해설</b> · ${fmt(q.explain)}${xfigs(q,true)}</div>
     </div>`;
   });
   html+=`</div>`;app.innerHTML=html;
@@ -948,7 +980,7 @@ function renderStudy(){
     <div class="qtext">${fmt(q.q)}</div>
     ${q.img?`<img class="qimg" data-img="${q.img}">`:""}
     <div class="choices" id="choices"></div>
-    <div class="expl ${done?"show":""}">${done?`<b class="ansline">✅ 정답 ${NUM[q.answer]}번${q.choicesImg?" (위 그림 참고)":""}</b>`:""}<b>해설</b> · ${fmt(q.explain)}</div>
+    <div class="expl ${done?"show":""}">${done?`<b class="ansline">✅ 정답 ${NUM[q.answer]}번${q.choicesImg?" (위 그림 참고)":""}</b>`:""}<b>해설</b> · ${fmt(q.explain)}${xfigs(q,done)}</div>
     <div class="navbtns">
       <button class="btn ghost" onclick="studyGo(-1)" ${STUDY.i===0?"disabled":""}>◀ 이전</button>
       <button class="btn primary" onclick="studyGo(1)" ${STUDY.i===STUDY.qs.length-1?"disabled":""}>다음 ▶</button>
@@ -988,7 +1020,7 @@ function renderQuiz(){
     <div class="qtext">${fmt(q.q)}</div>
     ${q.img?`<img class="qimg" data-img="${q.img}">`:""}
     <div class="choices" id="choices"></div>
-    <div class="expl ${done?"show":""}">${done?`<b class="ansline">${ok?"⭕ 정답입니다!":"❌ 틀렸어요"} · 정답 ${NUM[q.answer]}번${q.choicesImg?" (위 그림 참고)":""}</b>`:""}<b>해설</b> · ${fmt(q.explain)}</div>
+    <div class="expl ${done?"show":""}">${done?`<b class="ansline">${ok?"⭕ 정답입니다!":"❌ 틀렸어요"} · 정답 ${NUM[q.answer]}번${q.choicesImg?" (위 그림 참고)":""}</b>`:""}<b>해설</b> · ${fmt(q.explain)}${xfigs(q,done)}</div>
     <div class="navbtns">
       <button class="btn ghost" onclick="quizGo(-1)" ${QUIZ.i===0?"disabled":""}>◀ 이전</button>
       ${QUIZ.i===N-1
@@ -1076,7 +1108,7 @@ function reviewQuiz(){
           if(n===my)return `<div class="tag-no">${NUM[n]} ${t} ✘ 내 답</div>`;
           return `<div style="color:#94a3b8">${NUM[n]} ${t}</div>`;}).join("")}
       </div>
-      <div class="expl show"><b>해설</b> · ${fmt(q.explain)}</div>
+      <div class="expl show"><b>해설</b> · ${fmt(q.explain)}${xfigs(q,true)}</div>
     </div>`;});
   html+=`</div>`;app.innerHTML=html;
 }
@@ -1131,11 +1163,15 @@ function renderRankBoard(r,me){
 /* ---------------- 이론 학습 ---------------- */
 const THEORY=(window.THEORY||[]);
 function theoryCount(){return THEORY.reduce((a,s)=>a+s.chapters.reduce((b,c)=>b+c.cards.length,0),0);}
-const FIGS=(window.THEORY_FIGS||{});
+/* 이름이 FIGS 면 figs.js(var FIGS)와 겹쳐 페이지가 죽는다 — THFIGS 로 */
+const THFIGS=(window.THEORY_FIGS||{});
 function figsHtml(subject,title){
-  const list=FIGS[subject+"|"+title];
-  if(!list||!list.length)return "";
-  return list.map(f=>`<figure class="tfig">${f.svg}${f.cap?`<figcaption>${esc(f.cap)}</figcaption>`:""}</figure>`).join("");
+  const list=THFIGS[subject+"|"+title]||[];
+  /* 해설 그림(figs.js) 중 이 카드에 함께 붙이기로 한 것 — 한 번 그리고 두 곳에 */
+  const more=(window.cardFigKeys&&window.FIG)?window.cardFigKeys(subject+"|"+title):[];
+  if(!list.length&&!more.length)return "";
+  return list.map(f=>`<figure class="tfig">${f.svg}${f.cap?`<figcaption>${esc(f.cap)}</figcaption>`:""}</figure>`).join("")
+    +(more.length?`<div class="xfig cardfig">${more.map(k=>FIG.figure(k)).join("")}</div>`:"");
 }
 function cardBodyHtml(s,k){return (k.body||[]).map(renderBlock).join("")+figsHtml(s.subject,k.t);}
 function theoryPick(){
@@ -1288,8 +1324,10 @@ function chunk(items,maxCount,maxChars,textOf){
 }
 function buildSlides(s,k){
   const out=[{kind:"cover",title:k.t,sub:s.subject}];
-  const figs=FIGS[s.subject+"|"+k.t]||[];
+  const figs=THFIGS[s.subject+"|"+k.t]||[];
   figs.forEach(f=>out.push({kind:"fig",svg:f.svg,cap:f.cap}));
+  if(window.cardFigKeys&&window.FIG)window.cardFigKeys(s.subject+"|"+k.t)
+    .forEach(fk=>out.push({kind:"fig",svg:FIG.svgOf(fk),cap:FIG.cap(fk)}));
   (k.body||[]).forEach(b=>{
     if(b.ul&&b.ul.length){
       const parts=chunk(b.ul,SLIDE_LIST,SLIDE_CHARS,x=>x);
@@ -1421,7 +1459,7 @@ function lessonQuizHtml(){
         return `<div class="${cls}" ${done?"":`onclick="lessonAnswer(${num})"`}>
           <span class="num">${NUM[num]}</span><span>${q.choicesImg?"":fmt(c)}</span></div>`;}).join("")}
     </div>
-    <div class="expl ${done?"show":""}">${done?`<b class="ansline">✅ 정답 ${NUM[q.answer]}번${q.choicesImg?" (위 그림 참고)":""}</b>`:""}<b>해설</b> · ${fmt(q.explain)}</div>
+    <div class="expl ${done?"show":""}">${done?`<b class="ansline">✅ 정답 ${NUM[q.answer]}번${q.choicesImg?" (위 그림 참고)":""}</b>`:""}<b>해설</b> · ${fmt(q.explain)}${xfigs(q,done)}</div>
     <div class="lessonnav">
       <button class="btn ghost" onclick="lessonBackToSlides()">◀ 설명</button>
       ${qz.i<qz.qs.length-1
@@ -1477,7 +1515,7 @@ function renderNote(){
     <div class="qtext">${fmt(q.q)}</div>
     ${q.img?`<img class="qimg" data-img="${q.img}">`:""}
     <div class="choices" id="choices"></div>
-    <div class="expl ${done?"show":""}">${done?`<b class="ansline">✅ 정답 ${NUM[q.answer]}번${q.choicesImg?" (위 그림 참고)":""}</b>`:""}<b>해설</b> · ${fmt(q.explain)}</div>
+    <div class="expl ${done?"show":""}">${done?`<b class="ansline">✅ 정답 ${NUM[q.answer]}번${q.choicesImg?" (위 그림 참고)":""}</b>`:""}<b>해설</b> · ${fmt(q.explain)}${xfigs(q,done)}</div>
     <div class="navbtns">
       <button class="btn ghost" onclick="noteGo(-1)" ${NOTE.i===0?"disabled":""}>◀ 이전</button>
       <button class="btn ghost" onclick="masterNote()">✓ 익힘(삭제)</button>
